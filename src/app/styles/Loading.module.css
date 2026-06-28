@@ -1,0 +1,31 @@
+.wrapper {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: #000;
+}
+
+.loader {
+  width: fit-content;
+  font-weight: bold;
+  font-family: monospace;
+  font-size: 30px;
+  background: radial-gradient(circle closest-side, #fff 94%, transparent) right / calc(200% - 1em) 100%;
+  animation: l24 1s infinite alternate linear;
+}
+
+.loader::before {
+  content: "Loading...";
+  line-height: 1em;
+  color: transparent;
+  background: inherit;
+  background-image: radial-gradient(circle closest-side, #000 94%, #fff);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+@keyframes l24 {
+  100% {
+    background-position: left;
+  }
+}

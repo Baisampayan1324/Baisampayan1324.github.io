@@ -1,0 +1,4 @@
+/* Section composer wrapper — true black canvas (see DESIGN.md). */
+.stack {
+  background: #000000;
+}

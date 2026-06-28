@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Next.js
+/.next/
+/out/
+/build/
+
+# Build outputs
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local settings
+.claude/settings.local.json
+.claude/settings.json
+
+# Temporary files
+*.tmp
+*.temp
+dist/
+
+# IDE settings (if committing .vscode, use a whitelist instead)
+.vscode/settings.json
+.vscode/extensions.json
+

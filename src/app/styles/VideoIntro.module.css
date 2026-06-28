@@ -1,0 +1,585 @@
+/* ─── Hero Section ─────────────────────────── */
+.hero {
+  position: relative;
+  width: 100%;
+  height: 100svh;
+  min-height: 600px;
+  overflow: hidden;
+  background: #060608;
+  display: flex;
+  align-items: center;
+}
+
+/* ─── Background blur ambient layer ────────── */
+.bgBlur {
+  position: absolute;
+  inset: -40px;
+  z-index: 1;
+  filter: blur(48px) saturate(0.7) brightness(0.35);
+  transform: scale(1.08);
+  pointer-events: none;
+}
+
+.bgVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.7;
+}
+
+/* ─── Main video ───────────────────────────── */
+.mainVideo {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  opacity: 0.88;
+}
+
+/* ─── Gradient overlays ─────────────────────── */
+.overlays {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.gradLeft {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    rgba(6, 6, 8, 0.94) 0%,
+    rgba(6, 6, 8, 0.75) 30%,
+    rgba(6, 6, 8, 0.0) 58%
+  );
+}
+
+.gradBottom {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(6, 6, 8, 0.98) 0%,
+    rgba(6, 6, 8, 0.55) 20%,
+    transparent 45%
+  );
+}
+
+.gradTop {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(6, 6, 8, 0.75) 0%,
+    transparent 22%
+  );
+}
+
+.gradRight {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to left,
+    rgba(6, 6, 8, 0.55) 0%,
+    transparent 35%
+  );
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 60% 40%,
+    transparent 35%,
+    rgba(6, 6, 8, 0.5) 100%
+  );
+}
+
+/* ─── Controls ──────────────────────────────── */
+.controls {
+  /* hidden: replaced with simpler CTAs at bottom */
+  display: none !important;
+}
+
+.glassBtn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border-radius: 100px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  color: rgba(245, 240, 232, 0.8);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11.5px;
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    transform 0.2s ease;
+}
+
+.glassBtn:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.20);
+  color: rgba(245, 240, 232, 1);
+  transform: translateY(-1px);
+}
+
+.glassBtn:active {
+  transform: translateY(0);
+}
+
+/* ─── Sound badge ───────────────────────────── */
+.soundBadge { display: none !important; }
+
+.soundDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #F59E0B;
+  flex-shrink: 0;
+  animation: dotBlink 1.4s ease-in-out infinite;
+}
+
+/* ─── Content overlay ───────────────────────── */
+.content {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  /* place content at bottom so name/title appear below the face/video */
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.contentInner {
+  padding: 0 7vw 8vh 7vw;
+  max-width: 780px;
+  pointer-events: auto;
+}
+
+/* ─── Tagline ────────────────────────────────── */
+.tagline {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: 'Syne', sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(245, 158, 11, 0.85);
+  margin-bottom: 28px;
+}
+
+.taglineLine {
+  display: block;
+  width: 36px;
+  height: 1px;
+  background: rgba(245, 158, 11, 0.6);
+  flex-shrink: 0;
+}
+/* hide the small decorative line in hero tagline */
+.taglineLine { display: none !important; }
+
+/* ─── Name block ─────────────────────────────── */
+.nameBlock {
+  overflow: visible; /* allow letters to render outside while animating */
+  margin-bottom: 28px;
+  /* start positioned slightly above final (over face) */
+  transform: translateY(-18vh);
+  white-space: nowrap; /* keep full name on a single line */
+  transition: transform 0.9s cubic-bezier(.2,.9,.3,1);
+}
+
+.nameFirst,
+.nameLast {
+  display: inline-block;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700;
+  font-style: italic;
+  line-height: 0.92;
+  letter-spacing: -0.01em;
+  color: #F5F0E8;
+  /* reduced size per request */
+  font-size: clamp(36px, 6.5vw, 84px);
+  text-shadow:
+    0 0 80px rgba(245, 158, 11, 0.12),
+    0 2px 40px rgba(0, 0, 0, 0.6);
+}
+
+.nameLast {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(245, 240, 232, 0.65);
+  -webkit-text-fill-color: transparent;
+  margin-left: 10px;
+}
+
+/* settled state: slide name down to final position */
+.nameSettled {
+  transform: translateY(10vh) !important;
+}
+
+/* change name color to match theme */
+.nameFirst { color: var(--amber); }
+.nameLast { -webkit-text-stroke: 1px var(--amber); -webkit-text-fill-color: transparent; }
+
+/* ─── Role block ─────────────────────────────── */
+.roleBlock {
+  margin-bottom: 34px;
+  transition: transform 0.6s ease;
+}
+
+/* when name settles, nudge role lower to avoid overlap */
+.nameSettled ~ .roleBlock {
+  transform: translateY(5vh);
+}
+
+.roleRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.roleDivider {
+  display: block;
+  width: 2px;
+  height: 22px;
+  background: rgba(245, 158, 11, 0.55);
+  flex-shrink: 0;
+  border-radius: 2px;
+}
+
+.roleText {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(13px, 1.6vw, 16px);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(245, 240, 232, 0.85);
+}
+
+.roleSubtext {
+  font-family: 'DM Sans', sans-serif;
+  font-size: clamp(12px, 1.3vw, 14px);
+  font-weight: 200;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  color: rgba(176, 168, 152, 0.7);
+  padding-left: 18px;
+}
+
+/* ─── CTA row ────────────────────────────────── */
+.ctaRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.ctaPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 999px; /* smaller pill button */
+  background: #FFC000; /* flat Lamborghini Gold */
+  border: none;
+  color: #000000;
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s ease; /* color-only hover */
+}
+
+.ctaPrimary:hover {
+  background: #917300; /* Dark Gold */
+}
+
+.ctaSecondary {
+  padding: 13px 26px;
+  border-radius: 4px;
+  background: transparent;
+  border: 1px solid rgba(245, 240, 232, 0.18);
+  color: rgba(245, 240, 232, 0.7);
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: border-color 0.3s, color 0.3s, background 0.3s, transform 0.25s;
+}
+
+.ctaSecondary:hover {
+  border-color: rgba(245, 158, 11, 0.45);
+  color: rgba(245, 158, 11, 0.9);
+  background: rgba(245, 158, 11, 0.06);
+  transform: translateY(-1px);
+}
+
+/* Tertiary CTA (CV) */
+.ctaTertiary {
+  padding: 12px 22px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: rgba(245, 240, 232, 0.85);
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.18s ease;
+}
+
+.ctaTertiary:hover {
+  background: rgba(245, 158, 11, 0.06);
+  border-color: rgba(245, 158, 11, 0.18);
+  transform: translateY(-1px);
+}
+
+/* Floating controls (bottom-right) */
+.floatingControls {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.floatBtn {
+  width: 54px;
+  height: 54px;
+  border-radius: 999px; /* fully rounded */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #000; /* black background */
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #ffffff; /* white icon */
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+}
+
+.floatBtn:hover {
+  transform: translateY(-4px);
+  background: #0a0a0a;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* ─── Scroll indicator ───────────────────────── */
+.scrollIndicator {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(176, 168, 152, 0.55);
+  transition: color 0.3s, transform 0.25s;
+}
+
+/* Responsive: force two-line stacked name on narrower viewports to avoid avatar overlap */
+@media (max-width: 980px) {
+  .nameBlock {
+    transform: translateY(-10vh);
+    margin-bottom: 22px;
+  }
+  .nameFirst, .nameLast {
+    font-size: clamp(34px, 10vw, 64px);
+    line-height: 0.98;
+    display: block;
+    white-space: normal;
+  }
+  .nameSettled {
+    transform: translateY(10vh) !important;
+  }
+}
+
+.scrollIndicator:hover {
+  color: rgba(245, 158, 11, 0.8);
+}
+
+.scrollLabel {
+  font-family: 'Syne', sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.scrollTrack {
+  width: 2px;
+  height: 56px;
+  background: rgba(176, 168, 152, 0.12);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.scrollPulse {
+  position: absolute;
+  top: -120%;
+  left: 0;
+  width: 100%;
+  height: 80%;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(245, 158, 11, 0.95) 50%,
+    transparent 100%
+  );
+  border-radius: 2px;
+  animation: pulseGlow 1.8s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+  0% { transform: translateY(-120%); opacity: 0; }
+  30% { opacity: 0.8; }
+  60% { transform: translateY(30%); opacity: 0.95; }
+  100% { transform: translateY(120%); opacity: 0; }
+}
+
+/* Active (highlighted) scroll indicator while in hero */
+.scrollActive {
+  transform: translateX(-50%) scale(1.05);
+  color: rgba(245, 158, 11, 0.95);
+}
+
+.scrollActive .scrollTrack {
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.scrollActive .scrollPulse {
+  animation-duration: 1.4s;
+}
+
+/* ─── Responsive ─────────────────────────────── */
+@media (max-width: 768px) {
+  .contentInner {
+    padding: 0 24px;
+    max-width: 100%;
+  }
+
+  .controls {
+    top: 20px;
+    right: 20px;
+  }
+
+  .glassBtn span {
+    display: none;
+  }
+
+  .glassBtn {
+    padding: 9px 12px;
+  }
+
+  .nameLast {
+    -webkit-text-stroke-width: 0.8px;
+  }
+
+  .ctaPrimary,
+  .ctaSecondary {
+    padding: 12px 20px;
+    font-size: 11px;
+  }
+
+  .soundBadge {
+    bottom: 80px;
+  }
+
+  .roleSubtext {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .tagline {
+    font-size: 9px;
+    margin-bottom: 20px;
+  }
+
+  .roleText {
+    font-size: 11px;
+  }
+
+  .ctaRow {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 380px) {
+  .contentInner {
+    padding: 0 16px;
+  }
+
+  .ctaPrimary {
+    padding: 9px 16px;
+    font-size: 11px;
+  }
+}
+
+
+/* ─── Liquid morphing hero text ──────────────── */
+.heroMorph {
+  margin: 0 0 32px;
+  margin-left: 0;
+  max-width: none;
+  text-align: left;
+  white-space: nowrap;
+  color: #FFFFFF;
+  font-family: 'Syne', sans-serif;
+  font-style: normal;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.92;
+  /* reduced hero title size */
+  font-size: clamp(32px, 6vw, 72px);
+  text-shadow: 0 2px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* make the incoming morphing text (job title) visually yellow */
+.heroMorph > span:nth-child(2) {
+  color: rgba(245, 158, 11, 0.98);
+}
+
+@media (max-width: 768px) {
+  .heroMorph {
+    margin-bottom: 24px;
+    font-size: clamp(28px, 8.5vw, 48px);
+  }
+
+  .nameFirst,
+  .nameLast {
+    font-size: clamp(30px, 8vw, 64px);
+  }
+}

@@ -1,0 +1,20 @@
+.flip-char {
+  opacity: 0;
+  transform-origin: 50% 50% -10px;
+  animation: flipText var(--flip-duration, 2.2s) cubic-bezier(0.4, 0, 0.2, 1) var(--flip-delay, 0s) var(--flip-iteration, infinite) forwards;
+}
+
+@keyframes flipText {
+  0% {
+    opacity: 0;
+    transform: rotateX(-90deg);
+  }
+  15%, 85% {
+    opacity: 1;
+    transform: rotateX(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: rotateX(90deg);
+  }
+}

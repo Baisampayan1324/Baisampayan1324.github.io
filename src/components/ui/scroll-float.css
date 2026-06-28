@@ -1,0 +1,28 @@
+.scroll-float {
+  overflow: hidden;
+  margin: 0;
+}
+
+.scroll-float-text {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 0.28em; /* space between words */
+  row-gap: 0;
+  font-family: 'Syne', sans-serif;
+  /* section heading */
+  font-size: clamp(1.8rem, 4.5vw, 3.6rem);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  line-height: 1.02;
+}
+
+/* Keep each word intact — break only between words, never mid-word. */
+.word {
+  display: inline-flex;
+  white-space: nowrap;
+}
+
+.char {
+  display: inline-block;
+}
