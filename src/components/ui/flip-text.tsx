@@ -1,11 +1,8 @@
 "use client";
 
 import React, { useMemo } from "react";
+import { cn } from "@/utils/cn";
 import './flip-text.css';
-
-function cn(...classes: any[]) {
-  return classes.filter(Boolean).join(' ');
-}
 
 interface FlipTextProps {
     /**

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { SplineScene } from "@/components/ui/splite";
+import { SplineScene } from "@/components/ui/spline-scene";
 import ScrollFloat from "@/components/ui/scroll-float";
 
 const SYNE: React.CSSProperties = { fontFamily: "'Syne', sans-serif" };
@@ -12,6 +12,27 @@ interface AboutHeroProps {
 }
 
 export function AboutHero({ avatar }: AboutHeroProps) {
+  const [hasBeenVisible, setHasBeenVisible] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setHasBeenVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" } // Load slightly before it enters viewport
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <section
       id="about"
@@ -20,13 +41,6 @@ export function AboutHero({ avatar }: AboutHeroProps) {
       {/* Left: content */}
       <div className="flex w-full flex-col justify-between p-6 sm:p-8 md:w-3/5 md:p-12 lg:p-20">
         <div>
-          <p
-            className="mb-5 text-xs font-bold uppercase tracking-[0.22em] text-primary sm:mb-6"
-            style={SYNE}
-          >
-            About Me
-          </p>
-
           <div>
             <ScrollFloat containerClassName="mb-6 sm:mb-8" textClassName="text-foreground">
               AI / ML developer building production ready systems
@@ -50,6 +64,7 @@ export function AboutHero({ avatar }: AboutHeroProps) {
 
       {/* Right: 3D avatar slot */}
       <div
+        ref={containerRef}
         className="relative w-full min-h-[300px] sm:min-h-[380px] md:w-2/5 md:min-h-full overflow-hidden p-5 sm:p-8 flex items-center justify-center"
       >
         {avatar ? (
@@ -63,10 +78,12 @@ export function AboutHero({ avatar }: AboutHeroProps) {
                   "radial-gradient(circle at 50% 50%, color-mix(in oklch, hsl(var(--primary)) 25%, transparent) 0%, color-mix(in oklch, hsl(var(--secondary)) 15%, transparent) 50%, transparent 75%)",
               }}
             />
-            <SplineScene 
-              scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
-              className="w-full h-full relative z-10"
-            />
+            {hasBeenVisible && (
+              <SplineScene 
+                scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
+                className="w-full h-full relative z-10"
+              />
+            )}
           </div>
         )}
       </div>

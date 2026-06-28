@@ -120,7 +120,6 @@ const SplitText = ({
                 animationCompletedRef.current = true;
                 onCompleteRef.current?.();
               },
-              willChange: 'transform, opacity',
               force3D: true,
             }
           );
@@ -162,7 +161,7 @@ const SplitText = ({
     textAlign,
     overflow,
     display: 'inline-block',
-    willChange: 'transform, opacity',
+    // willChange removed: permanent compositor layer on the hero name after animation completes wastes GPU memory
   };
   const classes = `split-parent ${className}`;
   const Tag = (tag || 'p') as ElementType;

@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useRef, type ReactNode, type RefObject } from 'react';
+import { useMemo, useRef, type ReactNode, type RefObject } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
 
 import './scroll-float.css';
 
@@ -20,6 +21,9 @@ interface ScrollFloatProps {
   stagger?: number;
   scrub?: boolean | number;
 }
+
+const prefersReducedMotion =
+  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 export default function ScrollFloat({
   children,
@@ -53,47 +57,67 @@ export default function ScrollFloat({
     ));
   }, [children]);
 
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
+  useGSAP(
+    () => {
+      const el = containerRef.current;
+      if (!el) return;
 
-    const scroller = scrollContainerRef && scrollContainerRef.current ? scrollContainerRef.current : window;
-    const charElements = el.querySelectorAll('.char');
+      // Skip animation; leave chars visible at their final state
+      if (prefersReducedMotion) return;
 
-    const tween = gsap.fromTo(
-      charElements,
-      {
-        willChange: 'opacity, transform',
-        opacity: 0,
-        yPercent: 120,
-        scaleY: 2.3,
-        scaleX: 0.7,
-        transformOrigin: '50% 0%',
-      },
-      {
-        duration: animationDuration,
-        ease,
-        opacity: 1,
-        yPercent: 0,
-        scaleY: 1,
-        scaleX: 1,
-        stagger,
-        scrollTrigger: {
-          trigger: el,
-          scroller,
-          start: scrollStart,
-          end: scrollEnd,
-          scrub,
-          toggleActions: 'play none none reverse',
+      const scroller = scrollContainerRef && scrollContainerRef.current ? scrollContainerRef.current : window;
+      const charElements = el.querySelectorAll('.char');
+
+      const tween = gsap.fromTo(
+        charElements,
+        {
+          // No willChange — GSAP promotes layers automatically during animation.
+          // Explicit willChange on individual chars creates one compositor layer
+          // per character, exhausting GPU memory on mobile.
+          opacity: 0,
+          yPercent: 120,
+          scaleY: 2.3,
+          scaleX: 0.7,
+          transformOrigin: '50% 0%',
         },
-      }
-    );
+        {
+          duration: animationDuration,
+          ease,
+          opacity: 1,
+          yPercent: 0,
+          scaleY: 1,
+          scaleX: 1,
+          stagger,
+          scrollTrigger: {
+            trigger: el,
+            scroller,
+            start: scrollStart,
+            end: scrollEnd,
+            scrub,
+            toggleActions: 'play none none reverse',
+          },
+        }
+      );
 
-    return () => {
-      tween.scrollTrigger?.kill();
-      tween.kill();
-    };
-  }, [scrollContainerRef, animationDuration, ease, scrollStart, scrollEnd, stagger, scrub]);
+      return () => {
+        tween.scrollTrigger?.kill();
+        tween.kill();
+      };
+    },
+    {
+      scope: containerRef,
+      dependencies: [
+        scrollContainerRef,
+        animationDuration,
+        ease,
+        scrollStart,
+        scrollEnd,
+        stagger,
+        scrub,
+        children,
+      ],
+    }
+  );
 
   return (
     <h2 ref={containerRef} className={`scroll-float ${containerClassName}`}>

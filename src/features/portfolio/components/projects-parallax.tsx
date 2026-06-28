@@ -1,76 +1,14 @@
 "use client";
 
 import React, { useRef } from "react";
-import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import { motion, useScroll, useTransform, useSpring, useReducedMotion } from "framer-motion";
 import ScrollFloat from "@/components/ui/scroll-float";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { projects, Project } from "@/features/projects/constants/projects-data";
 
 const SYNE: React.CSSProperties = { fontFamily: "'Syne', sans-serif" };
 const DM: React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" };
-
-type Project = {
-  tag: string; // short label used for the visual watermark only
-  title: string;
-  points: string[];
-  github: string;
-  live: string;
-  color: string;
-  image?: string;
-  video?: string;
-};
-
-// TODO: replace github/live with the real repo + deployment URLs per project.
-const projects: Project[] = [
-  {
-    tag: "AI MOM (Minutes of Meetings)",
-    title: "AI MOM - Meeting Intelligence",
-    points: [
-      "Real-time meeting intelligence platform that transcribes and summarizes conversations with advanced speaker diarization.",
-      "Leverages concurrent multi-model processing to deliver comprehensive insights and context-aware alerts.",
-    ],
-    github: "https://github.com/Baisampayan1324/AI-MOM", 
-    live: "https://ai-mom-iota.vercel.app/",
-    color: "#4A90D9",
-    video: "/companies/ai-mom.mp4",
-  },
-  {
-    tag: "Stress Analysis",
-    title: "Stress Analysis AI System",
-    points: [
-      "Full-stack AI application combining machine learning with large language models to provide personalized stress assessments.",
-      "Delivers real-time analytics and intelligent counseling recommendations to help users manage their well-being effectively.",
-    ],
-    github: "https://github.com/Baisampayan1324/Stress-Analysis-AI-System",
-    live: "https://stress-compass-ai.vercel.app/",
-    color: "#7C3AED",
-    image: "/companies/stress.png",
-  },
-  {
-    tag: "DocuMind AI",
-    title: "DocuMind -  RAG Chat System",
-    points: [
-      "Enterprise-grade RAG chat system allowing users to converse naturally with their documents across multiple formats.",
-      "Features semantic search and an automatic multi-LLM failover mechanism for high reliability and accurate source citations.",
-    ],
-    github: "https://github.com/Baisampayan1324/DocuMind",
-    live: "https://doc-u-mind.dev/",
-    color: "#10B981",
-    // video: "/companies/documind.mp4",
-  },
-  {
-    tag: "MailBuddy",
-    title: "MailBuddy - AI Email Assistant",
-    points: [
-      "High-performance AI email assistant designed to streamline inbox triage through intelligent classification and summarization.",
-      "Utilizes an adaptive workflow to draft smart, context-aware replies and manage ongoing communications efficiently.",
-    ],
-    github: "",
-    live: "https://mailbuddy-xi.vercel.app/",
-    color: "#F59E0B",
-    image: "/companies/mailbuddy.png",
-  },
-];
 
 function GithubIcon() {
   return (
@@ -89,9 +27,11 @@ function ExternalIcon() {
     </svg>
   );
 }
-function ProjectRow({ project, index }: { project: Project; index: number }) {
+
+const ProjectRow = React.memo(function ProjectRow({ project, index }: { project: Project; index: number }) {
   const reverse = index % 2 === 1;
   const ref = useRef<HTMLDivElement>(null);
+  const prefersReduced = useReducedMotion();
 
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -100,15 +40,18 @@ function ProjectRow({ project, index }: { project: Project; index: number }) {
 
   const smooth = useSpring(scrollYProgress, { stiffness: 90, damping: 24, mass: 0.5 });
 
-  const textY = useTransform(smooth, [0, 1], [70, -40]);
-  const opacity = useTransform(smooth, [0, 0.55], [0, 1]);
-  const scale = useTransform(smooth, [0, 0.6], [1.12, 1]);
+  // When reduced-motion is preferred, disable parallax and reveal immediately
+  const textY = useTransform(smooth, [0, 1], prefersReduced ? [0, 0] : [70, -40]);
+  const opacity = useTransform(smooth, [0, 0.55], prefersReduced ? [1, 1] : [0, 1]);
+  const scale = useTransform(smooth, [0, 0.6], prefersReduced ? [1, 1] : [1.12, 1]);
   const clipPath = useTransform(
     smooth,
     [0, 0.6],
-    reverse
-      ? ["inset(0 0 0 100%)", "inset(0 0 0 0%)"]
-      : ["inset(0 100% 0 0)", "inset(0 0% 0 0)"]
+    prefersReduced
+      ? ["inset(0 0 0 0%)", "inset(0 0 0 0%)"]
+      : reverse
+        ? ["inset(0 0 0 100%)", "inset(0 0 0 0%)"]
+        : ["inset(0 100% 0 0)", "inset(0 0% 0 0)"]
   );
 
   return (
@@ -123,7 +66,7 @@ function ProjectRow({ project, index }: { project: Project; index: number }) {
         <h3 className="text-2xl font-extrabold uppercase leading-[1.02] tracking-tight text-foreground sm:text-3xl md:text-4xl" style={SYNE}>
           {project.title}
         </h3>
-        <div className="my-5 h-1 w-14 md:my-6 md:w-16" style={{ background: project.color }} />
+        <div className="my-5 h-1 w-14 md:my-6 md:w-16" style={{ background: project.accentColor }} />
 
         <ul className="grid gap-3 md:gap-4">
           {project.points.map((point, i) => (
@@ -168,7 +111,7 @@ function ProjectRow({ project, index }: { project: Project; index: number }) {
             scale,
             background: project.image
               ? `url(${project.image}) center/cover no-repeat`
-              : `linear-gradient(135deg, ${project.color}40 0%, #0b0b0b 70%)`,
+              : `linear-gradient(135deg, ${project.accentColor}40 0%, #0b0b0b 70%)`,
           }}
           className="relative flex w-full items-end overflow-hidden rounded-xl shadow-2xl group aspect-video md:w-[44rem] lg:w-[48rem] md:aspect-video"
         >
@@ -197,7 +140,7 @@ function ProjectRow({ project, index }: { project: Project; index: number }) {
           {(!project.image && !project.video) && (
             <div
               className="absolute -right-10 -top-10 h-44 w-44 rounded-full blur-3xl"
-              style={{ background: project.color, opacity: 0.35 }}
+              style={{ background: project.accentColor, opacity: 0.35 }}
             />
           )}
           <span className="relative z-10 p-4 text-xl font-black uppercase tracking-tight text-white/90 sm:p-6 sm:text-2xl md:text-3xl drop-shadow-md" style={SYNE}>
@@ -207,22 +150,21 @@ function ProjectRow({ project, index }: { project: Project; index: number }) {
       </motion.div>
     </div>
   );
-}
+});
 
 export function ProjectsParallax() {
+  const featuredProjects = projects.filter((p) => p.featured);
+
   return (
     <section id="projects" className="relative w-full bg-background px-4 py-16 sm:px-6 sm:py-20 md:px-12 md:py-24 border-t border-border/50">
       <header className="mx-auto mb-10 max-w-7xl md:mb-12">
-        <p className="mb-4 text-xs font-bold uppercase tracking-[0.22em] text-primary md:mb-5" style={SYNE}>
-          Projects
-        </p>
         <ScrollFloat containerClassName="text-foreground" textClassName="text-foreground">
           Selected AI projects and production systems
         </ScrollFloat>
       </header>
 
       <div className="mx-auto flex max-w-7xl flex-col gap-16 sm:gap-20 md:gap-0">
-        {projects.map((project, index) => (
+        {featuredProjects.map((project, index) => (
           <ProjectRow key={project.title} project={project} index={index} />
         ))}
       </div>

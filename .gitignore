@@ -1,30 +1,53 @@
 # Dependencies
-node_modules/
+/node_modules
 /.pnp
 .pnp.js
 
-# Next.js
+# Next.js Build Outputs
 /.next/
 /out/
-/build/
+/build
+/dist
 
-# Build outputs
+# TS Build Info
 *.tsbuildinfo
 
-# Environment variables
+# Debug & Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+logs/
+
+# Local Environment Variables
 .env
 .env.local
-.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
 
-# IDE
-.vscode/
+# Vercel & Turbopack
+.vercel
+.turbo
+
+# IDE and Editor settings
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
 .idea/
-*.swp
-*.swo
-*.swn
+*.suo
+*.ntvsca*
+*.njsproj
+*.sln
+*.sw?
 *~
 
-# OS
+# Operating System Files
 .DS_Store
 .DS_Store?
 ._*
@@ -33,23 +56,18 @@ node_modules/
 ehthumbs.db
 Thumbs.db
 
-# Logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Local settings
-.claude/settings.local.json
-.claude/settings.json
-
-# Temporary files
+# Temporary Files
 *.tmp
 *.temp
-dist/
 
-# IDE settings (if committing .vscode, use a whitelist instead)
-.vscode/settings.json
-.vscode/extensions.json
+# AG Kit and Agent Files
+.agents/
+.claude/
 
+# AG Kit Skills
+skills-lock.json
+
+# Markdown Files
+*AUDIT.md
+*DESIGN.md
+*PRODUCT.md

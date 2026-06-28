@@ -1,43 +1,21 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useLenisScroll } from '@/components/ui/lenis-provider';
+import { useLenisScroll } from '@/providers/lenis-provider';
 import SplitText from '@/components/ui/split-text';
 import FlipText from '@/components/ui/flip-text';
-import styles from '../../app/styles/VideoIntro.module.css';
-
-// defensive removal helper to avoid intermittent `removeChild` TypeError
-const safeRemove = (el: Element | null) => {
-  if (!el) return;
-  try {
-    if ((el as any).remove) {
-      (el as any).remove();
-      return;
-    }
-    const p = el.parentElement;
-    if (p && p.contains(el)) p.removeChild(el);
-  } catch (err) {
-    // swallow intermittent DOM race errors
-  }
-};
+import styles from './video-intro.module.css';
+import { jobTitles } from '../constants/portfolio-data';
 
 export default function VideoIntro() {
   const lenis = useLenisScroll();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const bgVideoRef = useRef<HTMLVideoElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
 
   // Default to false as requested by user to hear voice immediately
   const [isMuted, setIsMuted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
   const [nameSettled, setNameSettled] = useState(true);
-
-  const jobTitles = [
-    "AI/ML Engineer",
-    "Python Developer",
-    "Full Stack Developer",
-    "Software Engineer"
-  ];
   const [currentJobIndex, setCurrentJobIndex] = useState(0);
 
   // Cycle through job titles
@@ -46,7 +24,7 @@ export default function VideoIntro() {
       setCurrentJobIndex((prev) => (prev + 1) % jobTitles.length);
     }, 3000);
     return () => clearInterval(id);
-  }, [jobTitles.length]);
+  }, []);
 
   // Settle name after SplitText animation completes
   useEffect(() => {
@@ -54,106 +32,24 @@ export default function VideoIntro() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Remove Next.js DevTools floating button in dev preview if present
-  useEffect(() => {
-    try {
-      const devDiv = document.querySelector("div[data-nextjs-devtools]");
-      safeRemove(devDiv);
-
-      const btns = Array.from(document.querySelectorAll('button')) as HTMLButtonElement[];
-      btns.forEach((b) => {
-        try {
-          const txt = (b.textContent || '').trim();
-          const aria = (b.getAttribute('aria-label') || '').trim();
-          if (txt.includes('Next.js') || txt.includes('Open Next.js Dev Tools') || aria === 'Next.js' || aria === 'N') {
-            safeRemove(b);
-          }
-        } catch (e) {
-          /* ignore per-button errors */
-        }
-      });
-
-      const iframes = Array.from(document.querySelectorAll('iframe')) as HTMLIFrameElement[];
-      iframes.forEach((f) => {
-        try {
-          if (f.src && f.src.includes('next')) safeRemove(f);
-        } catch (e) {
-          /* ignore */
-        }
-      });
-    } catch (e) {
-      // ignore
-    }
-  }, []);
-
-  // In some dev setups the button gets re-inserted; poll briefly and remove it if found
-  useEffect(() => {
-    const id = setInterval(() => {
-      try {
-        let removed = false;
-        const devDiv = document.querySelector("div[data-nextjs-devtools]");
-        if (devDiv) { safeRemove(devDiv); removed = true; }
-
-        const nodes = Array.from(document.querySelectorAll('button')) as HTMLButtonElement[];
-        nodes.forEach((n) => {
-          try {
-            const t = (n.textContent || '').trim();
-            const aria = (n.getAttribute('aria-label') || '').trim();
-            if (t.includes('Next.js') || t.includes('Open Next.js Dev Tools') || aria === 'Next.js' || aria === 'N') {
-              safeRemove(n); removed = true;
-            }
-          } catch (e) {
-            /* ignore per-button */
-          }
-        });
-
-        const iframe = Array.from(document.querySelectorAll('iframe')) as HTMLIFrameElement[];
-        iframe.forEach((f) => {
-          try {
-            if (f.src && f.src.includes('next')) { safeRemove(f); removed = true; }
-          } catch (e) {
-            /* ignore */
-          }
-        });
-
-        if (removed) {
-          clearInterval(id);
-        }
-      } catch (e) {
-        // ignore
-      }
-    }, 600);
-    // stop after 5s to avoid infinite polling
-    const stop = setTimeout(() => clearInterval(id), 5000);
-    return () => { clearInterval(id); clearTimeout(stop); };
-  }, []);
-
   const handleMuteToggle = () => {
     const v = videoRef.current;
-    const bg = bgVideoRef.current;
     if (!v) return;
     const next = !isMuted;
     v.muted = next;
     v.volume = next ? 0 : 1;
-    if (bg) bg.muted = true;
     setIsMuted(next);
-
-    if (!next) {
-      void v.play();
-    }
+    if (!next) void v.play();
   };
 
   const handlePlayPause = () => {
     const v = videoRef.current;
-    const bg = bgVideoRef.current;
     if (!v) return;
     if (v.paused) {
       v.play();
-      bg?.play();
       setIsPlaying(true);
     } else {
       v.pause();
-      bg?.pause();
       setIsPlaying(false);
     }
   };
@@ -162,28 +58,33 @@ export default function VideoIntro() {
   const [pastHero, setPastHero] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => {
-      const about = document.getElementById('about');
-      if (!about) return;
-      setPastHero(about.getBoundingClientRect().top <= window.innerHeight * 0.6);
-    };
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    const about = document.getElementById('about');
+    if (!about) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        // Set pastHero true if the about section is visible or has been scrolled past
+        setPastHero(entry.isIntersecting || entry.boundingClientRect.top < 0);
+      },
+      {
+        threshold: 0,
+      }
+    );
+
+    observer.observe(about);
+    return () => observer.disconnect();
   }, []);
 
-  // Auto-mute/unmute when entering/leaving the hero section
+  // Auto-mute/unmute and pause/play when entering/leaving the hero section
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
     if (pastHero) {
-      // user has scrolled past hero — mute to stop audio
       v.muted = true;
-      try { v.pause(); } catch (e) {}
+      try { v.pause(); } catch (_) {}
       setIsMuted(true);
       setIsPlaying(false);
     } else {
-      // user is in hero — unmute and play
       v.muted = false;
       v.volume = 1;
       void v.play().catch(() => {});
@@ -192,7 +93,7 @@ export default function VideoIntro() {
     }
   }, [pastHero]);
 
-  // Clean up video on unmount so audio doesn't keep playing in the background
+  // Clean up on unmount so audio/video doesn't keep playing in the background
   useEffect(() => {
     return () => {
       const v = videoRef.current;
@@ -213,19 +114,8 @@ export default function VideoIntro() {
   return (
     <section ref={sectionRef} className={styles.hero}>
 
-      {/* ── Background ambient blur layer ── */}
-      <div className={styles.bgBlur} aria-hidden="true">
-        <video
-          ref={bgVideoRef}
-          className={styles.bgVideo}
-          src="/hero-video.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-        />
-      </div>
+      {/* ── Background ambient layer (CSS gradient — replaces the second video decode) ── */}
+      <div className={styles.bgBlur} aria-hidden="true" />
 
       {/* ── Main foreground video ── */}
       <video
@@ -236,7 +126,7 @@ export default function VideoIntro() {
         muted={isMuted}
         loop
         playsInline
-        preload="auto"
+        preload="metadata"
       />
 
       {/* ── Cinematic gradient overlays ── */}

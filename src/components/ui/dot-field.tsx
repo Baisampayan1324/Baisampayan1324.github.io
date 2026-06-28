@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, memo, useId } from 'react';
-import './DotField.css';
+import './dot-field.css';
 
 const TWO_PI = Math.PI * 2;
 
@@ -46,6 +46,7 @@ const DotField = memo(({
   const glowOpacity = useRef(0);
   const engagement = useRef(0);
   const propsRef = useRef<any>({});
+  const isVisibleRef = useRef(false);
   
   propsRef.current = { dotRadius, dotSpacing, cursorRadius, cursorForce, bulgeOnly, bulgeStrength, sparkle, waveAmplitude, gradientFrom, gradientTo, dotShape };
   const rebuildRef = useRef<() => void>(null);
@@ -61,6 +62,7 @@ const DotField = memo(({
     
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     let resizeTimer: any;
+    let observer: IntersectionObserver | null = null;
 
     function resize() {
       clearTimeout(resizeTimer);
@@ -119,6 +121,12 @@ const DotField = memo(({
 
     function updateMouseSpeed() {
       const m = mouseRef.current;
+      // Handle initial state cleanly
+      if (m.prevX === -9999) {
+        m.prevX = m.x;
+        m.prevY = m.y;
+        return;
+      }
       const dx = m.prevX - m.x;
       const dy = m.prevY - m.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
@@ -128,12 +136,18 @@ const DotField = memo(({
       m.prevY = m.y;
     }
 
-    const speedInterval = setInterval(updateMouseSpeed, 20);
-
     let frameCount = 0;
 
     function tick() {
+      if (!isVisibleRef.current) {
+        rafRef.current = null;
+        return;
+      }
       frameCount++;
+      
+      // Calculate mouse speed directly inside the animation frame loop
+      updateMouseSpeed();
+      
       const dots = dotsRef.current;
       const m = mouseRef.current;
       const { w, h } = sizeRef.current;
@@ -245,8 +259,20 @@ const DotField = memo(({
     doResize();
     window.addEventListener('resize', resize);
     window.addEventListener('mousemove', onMouseMove, { passive: true });
-    // @ts-ignore
-    rafRef.current = requestAnimationFrame(tick);
+
+    const handleVisibility = (entries: IntersectionObserverEntry[]) => {
+      const entry = entries[0];
+      isVisibleRef.current = entry.isIntersecting;
+      if (entry.isIntersecting && !rafRef.current) {
+        // @ts-ignore
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    };
+
+    if (canvas.parentElement) {
+      observer = new IntersectionObserver(handleVisibility, { threshold: 0.05 });
+      observer.observe(canvas.parentElement);
+    }
 
     // @ts-ignore
     rebuildRef.current = () => {
@@ -256,7 +282,7 @@ const DotField = memo(({
 
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      clearInterval(speedInterval);
+      if (observer) observer.disconnect();
       clearTimeout(resizeTimer);
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', onMouseMove);

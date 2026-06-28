@@ -1,8 +1,8 @@
-import styles from '../../app/styles/NextSection.module.css';
-import { AboutHero } from '@/components/sections/about-hero';
+import styles from './next-section.module.css';
+import { AboutHero } from './about-hero';
 import Education from './education';
-import { ExperienceStack } from '@/components/sections/experience-stack';
-import { ProjectsParallax } from '@/components/sections/projects-parallax';
+import { ExperienceStack } from './experience-stack';
+import { ProjectsParallax } from './projects-parallax';
 import { TechnicalArsenal } from './technical-arsenal';
 
 // Thin composer — each section lives in its own file (no inline section markup).

@@ -1,6 +1,6 @@
 @layer theme, base, components, utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,200;0,9..40,300;0,9..40,400;1,9..40,200&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400&display=swap');
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
 
@@ -32,6 +32,14 @@
   --color-primary: hsl(var(--primary));
   --color-secondary: hsl(var(--secondary));
   --color-destructive: hsl(var(--destructive));
+
+  /* Brand surface tokens → Tailwind utilities (bg-surface-1, bg-surface-2, etc.) */
+  --color-surface-1: #16181f;   /* card background */
+  --color-surface-2: #202020;   /* charcoal panel */
+  --color-surface-3: #181818;   /* dark iron / smoke */
+  --color-gold: #FFC000;        /* Lamborghini Gold — use bg-gold / text-gold */
+  --color-gold-dark: #917300;   /* hover/pressed gold */
+  --color-obsidian: #000000;    /* absolute black body */
 }
 
 :root {
@@ -123,6 +131,20 @@
 ::selection {
   background: rgba(255, 192, 0, 0.25);
   color: var(--gold);
+}
+
+/* CSS containment: tell browser layout/style changes inside these sections don't affect outside.
+   Skips #experience (sticky cards) and #technical-arsenal (sticky scroll track). */
+#about,
+#contact {
+  contain: layout style;
+}
+
+/* Skip rendering off-screen contact section until user scrolls near it.
+   contain-intrinsic-size prevents layout shift when switching between rendered/skipped. */
+#contact {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 100vh;
 }
 
 /* Hide scrollbar everywhere (scroll still works) */

@@ -25,4 +25,6 @@
 
 .char {
   display: inline-block;
+  /* Default: visible. GSAP sets opacity:0 in JS only when reduced-motion is off.
+     This ensures headings never ship blank if JS is slow or observer stalls. */
 }

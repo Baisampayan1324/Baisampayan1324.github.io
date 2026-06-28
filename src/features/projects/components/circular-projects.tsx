@@ -3,38 +3,15 @@ import React, { useEffect, useRef, useState, useMemo, useCallback } from "react"
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import DotField from './DotField';
+import DotField from '@/components/ui/dot-field';
+import { Project } from "../constants/projects-data";
 
 const SYNE: React.CSSProperties = { fontFamily: "'Syne', sans-serif" };
 const DM: React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" };
 
-export interface Project {
-  title: string;
-  description: string;
-  techStack: string;
-  github: string;
-  live: string;
-  showGithub: boolean;
-  showLive: boolean;
-  accentColor: string;
-  image: string;
-  video?: string;
-}
-
 interface CircularProjectsProps {
   projects: Project[];
   autoplay?: boolean;
-}
-
-function calculateGap(width: number) {
-  const minWidth = 1024;
-  const maxWidth = 1456;
-  const minGap = 55;
-  const maxGap = 80;
-  if (width <= minWidth) return minGap;
-  if (width >= maxWidth)
-    return Math.max(minGap, maxGap + 0.06018 * (width - maxWidth));
-  return minGap + (maxGap - minGap) * ((width - minWidth) / (maxWidth - minWidth));
 }
 
 export const CircularProjects = ({
@@ -43,8 +20,6 @@ export const CircularProjects = ({
 }: CircularProjectsProps) => {
   const router = useRouter();
   const [activeIndex, setActiveIndex] = useState(0);
-  const [hoverPrev, setHoverPrev] = useState(false);
-  const [hoverNext, setHoverNext] = useState(false);
   const [containerWidth, setContainerWidth] = useState(1200);
 
   const imageContainerRef = useRef<HTMLDivElement>(null);
@@ -75,15 +50,6 @@ export const CircularProjects = ({
     };
   }, [autoplay, projectsLength]);
 
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") handlePrev();
-      if (e.key === "ArrowRight") handleNext();
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [activeIndex, projectsLength]);
-
   const handleNext = useCallback(() => {
     setActiveIndex((prev) => (prev + 1) % projectsLength);
     if (autoplayIntervalRef.current) clearInterval(autoplayIntervalRef.current);
@@ -93,6 +59,15 @@ export const CircularProjects = ({
     setActiveIndex((prev) => (prev - 1 + projectsLength) % projectsLength);
     if (autoplayIntervalRef.current) clearInterval(autoplayIntervalRef.current);
   }, [projectsLength]);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") handlePrev();
+      if (e.key === "ArrowRight") handleNext();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [handlePrev, handleNext]);
 
   function getImageStyle(index: number): React.CSSProperties {
     const isActive = index === activeIndex;
@@ -136,7 +111,6 @@ export const CircularProjects = ({
 
   // Create semi-transparent versions of the accent color for the dots
   const getGradientColors = () => {
-    // Basic conversion for solid hex to rgba (assuming hex like #4A90D9)
     const color = activeProject.accentColor;
     return {
       from: color + '66', // ~40% opacity
@@ -200,7 +174,8 @@ export const CircularProjects = ({
                   className="w-full h-full object-cover origin-center scale-[1.06]"
                 />
               ) : (
-              <img
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
                   src={project.image}
                   alt={project.title}
                   className="w-full h-full object-cover origin-center scale-[1.06]"
@@ -300,7 +275,7 @@ export const CircularProjects = ({
             </motion.div>
           </AnimatePresence>
 
-          {/* Navigation Arrows — Placed outside AnimatePresence so they don't jump when text changes */}
+          {/* Navigation Arrows */}
           <div className="flex gap-4 mt-6">
             <button
               onClick={handlePrev}

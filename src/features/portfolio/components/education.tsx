@@ -1,47 +1,10 @@
 import Image from 'next/image';
 import FlowArt, { FlowSection } from '@/components/ui/flow-art';
-import SideRays from '@/components/ui/SideRays';
+import SideRays from '@/components/ui/side-rays';
+import { education } from '../constants/portfolio-data';
 
 const SYNE: React.CSSProperties = { fontFamily: "'Syne', sans-serif" };
 const DM: React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" };
-
-type EducationEntry = {
-  badge?: string;
-  badgeImg?: string;
-  degree: string;
-  school: string;
-  period: string;
-  points: { label?: string; text: string }[];
-};
-
-const education: EducationEntry[] = [
-  {
-    badge: 'PU',
-    badgeImg: 'Parul.png',
-    degree: 'Bachelor of Technology in Computer Science & Engineering (Artificial Intelligence)',
-    school: 'Parul University',
-    period: '2023 — 2026',
-    points: [
-      { text: 'Pursuing specialized education in Artificial Intelligence with focus on machine learning, deep learning, and intelligent system design' },
-      { text: 'Engaging in cutting-edge research and practical applications of AI in real-world scenarios' },
-      { label: 'Specializations', text: 'Artificial Intelligence, Machine Learning, Deep Learning, Computer Vision, MEAN Stack Development, High Parallel Computing' },
-      { label: 'Key Coursework', text: 'Advanced Algorithms and Data Structures, Neural Networks and Deep Learning, Computer Vision and Image Processing, Natural Language Processing, AI Ethics and Responsible Computing' },
-    ],
-  },
-  {
-    badge: 'IMPS',
-    badgeImg: 'IMPS.png',
-    degree: 'Diploma in Computer Science',
-    school: 'IMPS Polytechnic College',
-    period: '2020 — 2023',
-    points: [
-      { text: 'Established solid foundation in computer science fundamentals including programming, data structures, software engineering, and system design' },
-      { text: 'Developed strong analytical thinking and problem-solving skills essential for advanced studies' },
-      { label: 'Core Areas', text: 'Programming Fundamentals, Data Structures, Database Systems, Algorithms, Software Engineering, System Analysis' },
-      { label: 'Core Competencies', text: 'Object-Oriented Programming (Java, C++), Database Design and Management, Web Technologies (HTML, CSS, JavaScript), Software Development Life Cycle, System Architecture and Design, Project Management Fundamentals' },
-    ],
-  },
-];
 
 export default function Education() {
   const total = education.length;
@@ -63,11 +26,8 @@ export default function Education() {
                   : 'radial-gradient(120% 80% at 100% 100%, #15130d 0%, #050505 60%)',
             }}
           >
-            {/* Top row: section label + index */}
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary" style={SYNE}>
-                Education
-              </p>
+            {/* Counter only — sequence is meaningful; generic label removed */}
+            <div className="flex items-center justify-end">
               <p className="text-xs font-bold tracking-[0.2em] text-muted-foreground" style={SYNE}>
                 {String(i + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
               </p>
@@ -83,7 +43,7 @@ export default function Education() {
                 {entry.badge}
               </span>
 
-              <article className="relative max-w-3xl rounded-2xl border border-white/10 bg-[#16181f]/90 p-8 md:p-12 backdrop-blur-sm">
+              <article className="relative max-w-3xl rounded-2xl border border-white/10 bg-surface-1/90 p-8 md:p-12 backdrop-blur-sm">
                 <div className="mb-6 flex items-center justify-between gap-4">
                   <span className="inline-flex h-14 w-14 items-center justify-center rounded-xl bg-white p-2">
                     {entry.badgeImg ? (
@@ -92,6 +52,7 @@ export default function Education() {
                         alt={`${entry.school} logo`}
                         width={40}
                         height={40}
+                        loading="lazy"
                         className="h-10 w-10 object-contain"
                       />
                     ) : (

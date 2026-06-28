@@ -1,11 +1,12 @@
-'use client'
+'use client';
 
-import { Suspense, lazy } from 'react'
-const Spline = lazy(() => import('@splinetool/react-spline'))
+import { Suspense, lazy } from 'react';
+
+const Spline = lazy(() => import('@splinetool/react-spline'));
 
 interface SplineSceneProps {
-  scene: string
-  className?: string
+  scene: string;
+  className?: string;
 }
 
 export function SplineScene({ scene, className }: SplineSceneProps) {
@@ -22,5 +23,5 @@ export function SplineScene({ scene, className }: SplineSceneProps) {
         className={className}
       />
     </Suspense>
-  )
+  );
 }

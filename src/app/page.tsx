@@ -1,6 +1,6 @@
-import VideoIntro from '@/components/sections/video-intro';
-import NextSection from '@/components/sections/next-section';
-import { ContactSection } from '@/components/sections/contact-section';
+import VideoIntro from '@/features/portfolio/components/video-intro';
+import NextSection from '@/features/portfolio/components/next-section';
+import { ContactSection } from '@/features/portfolio/components/contact-section';
 
 export default function Home() {
   return (

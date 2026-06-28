@@ -4,12 +4,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
+import { cn } from '@/utils/cn';
 
 gsap.registerPlugin(ScrollTrigger);
-
-function cx(...parts: Array<string | undefined | false | null>): string {
-  return parts.filter(Boolean).join(' ');
-}
 
 export interface FlowSectionProps {
   className?: string;
@@ -27,11 +24,11 @@ export const FlowSection: React.FC<FlowSectionProps> = ({
   <section
     data-flow-section
     aria-label={ariaLabel}
-    className={cx('relative min-h-screen w-full overflow-hidden', className)}
+    className={cn('relative min-h-screen w-full overflow-hidden', className)}
   >
     <div
       data-flow-inner
-      className={cx(
+      className={cn(
         'flow-art-container relative flex min-h-screen w-full flex-col justify-between gap-6 px-[4vw] pt-[clamp(2rem,8vw,4vw)] pb-[4vw]',
         'will-change-transform',
       )}
@@ -124,7 +121,7 @@ const FlowArt: React.FC<FlowArtProps> = ({
     <main
       ref={containerRef}
       aria-label={ariaLabel}
-      className={cx('w-full overflow-x-hidden', className)}
+      className={cn('w-full overflow-x-hidden', className)}
     >
       {children}
     </main>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { AnimatePresence, motion, useTransform, useSpring, useScroll } from "framer-motion";
 
 // --- Types ---
@@ -10,8 +10,13 @@ type Tech = { name: string; icon: string; desc: string; usage: string };
 
 interface BallProps {
   tech: Tech;
-  target: { x: number; y: number; scale: number; opacity: number };
-  onClick: () => void;
+  index: number;
+  smoothMorph: any;
+  smoothShuffle: any;
+  size: { width: number; height: number };
+  isScrollActive: boolean;
+  introTarget: { x: number; y: number; scale: number; opacity: number };
+  onClick: (index: number) => void;
 }
 
 // --- Card Component (trigger) ---
@@ -20,16 +25,105 @@ const CARD_H = 94; // px
 
 const ico = (path: string) => `https://api.iconify.design/${path}.svg?height=512`;
 
-function Ball({ tech, target, onClick }: BallProps) {
+const Ball = React.memo(function Ball({
+  tech,
+  index,
+  smoothMorph,
+  smoothShuffle,
+  size,
+  isScrollActive,
+  introTarget,
+  onClick,
+}: BallProps) {
+  // Pre-calculate static geometry layout params
+  const isMobile = size.width < 768;
+  const minDim = Math.min(size.width, size.height);
+
+  // A. Circle geometry
+  const circleRadius = Math.min(minDim * 0.36, 340);
+  const circleAngle = (index / TOTAL) * 360;
+  const circleRad = (circleAngle * Math.PI) / 180;
+  const circleX = Math.cos(circleRad) * circleRadius;
+  const circleY = Math.sin(circleRad) * circleRadius;
+
+  // B. Bottom rainbow arc geometry
+  const baseRadius = Math.min(size.width, size.height * 1.5);
+  const arcRadius = baseRadius * (isMobile ? 1.4 : 1.05);
+  const arcApexY = size.height * (isMobile ? 0.32 : 0.18);
+  const arcCenterY = arcApexY + arcRadius;
+
+  const spreadAngle = isMobile ? 110 : 150;
+  const startAngle = -90 - spreadAngle / 2;
+  const step = spreadAngle / (TOTAL - 1);
+  const maxRotation = spreadAngle * 0.8;
+  const scaleEnd = isMobile ? 1.05 : 1.35;
+
+  // Scroll-linked Framer Motion transform hooks
+  const x = useTransform([smoothMorph, smoothShuffle], ([latestMorph, latestShuffle]) => {
+    const boundedRotation = -(latestShuffle as number) * maxRotation;
+    const arcAngle = startAngle + index * step + boundedRotation;
+    const arcRad = (arcAngle * Math.PI) / 180;
+    const arcX = Math.cos(arcRad) * arcRadius;
+    return lerp(circleX, arcX, latestMorph as number);
+  });
+
+  const y = useTransform([smoothMorph, smoothShuffle], ([latestMorph, latestShuffle]) => {
+    const boundedRotation = -(latestShuffle as number) * maxRotation;
+    const arcAngle = startAngle + index * step + boundedRotation;
+    const arcRad = (arcAngle * Math.PI) / 180;
+    const arcY = Math.sin(arcRad) * arcRadius + arcCenterY;
+    return lerp(circleY, arcY, latestMorph as number);
+  });
+
+  const scale = useTransform(smoothMorph, (latestMorph) => {
+    return lerp(1, scaleEnd, latestMorph as number);
+  });
+
+  const handleClick = useCallback(() => {
+    onClick(index);
+  }, [onClick, index]);
+
+  if (!isScrollActive) {
+    return (
+      <motion.div
+        animate={{
+          x: introTarget.x,
+          y: introTarget.y,
+          scale: introTarget.scale,
+          opacity: introTarget.opacity,
+        }}
+        transition={{ type: "spring", stiffness: 40, damping: 15 }}
+        style={{
+          position: "absolute",
+          left: "50%",
+          top: "50%",
+          width: CARD_W,
+          height: CARD_H,
+          marginLeft: -CARD_W / 2,
+          marginTop: -CARD_H / 2,
+        }}
+        className="group cursor-pointer"
+        onClick={handleClick}
+      >
+        <div className="relative flex h-full w-full items-center justify-center rounded-2xl bg-white p-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.18)] ring-1 ring-black/10 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-[0_16px_40px_rgba(0,0,0,0.3)]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={ico(tech.icon)}
+            alt={tech.name}
+            loading="lazy"
+            className="h-[78%] w-[78%] object-contain transition-transform duration-300 group-hover:scale-110"
+            draggable={false}
+          />
+        </div>
+        <span className="pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-background opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+          {tech.name}
+        </span>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
-      animate={{
-        x: target.x,
-        y: target.y,
-        scale: target.scale,
-        opacity: target.opacity,
-      }}
-      transition={{ type: "spring", stiffness: 40, damping: 15 }}
       style={{
         position: "absolute",
         left: "50%",
@@ -38,11 +132,13 @@ function Ball({ tech, target, onClick }: BallProps) {
         height: CARD_H,
         marginLeft: -CARD_W / 2,
         marginTop: -CARD_H / 2,
+        x,
+        y,
+        scale,
       }}
       className="group cursor-pointer"
-      onClick={onClick}
+      onClick={handleClick}
     >
-      {/* The card */}
       <div className="relative flex h-full w-full items-center justify-center rounded-2xl bg-white p-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.18)] ring-1 ring-black/10 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-[0_16px_40px_rgba(0,0,0,0.3)]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -52,14 +148,12 @@ function Ball({ tech, target, onClick }: BallProps) {
           draggable={false}
         />
       </div>
-
-      {/* Name label on hover */}
       <span className="pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-background opacity-0 transition-opacity duration-200 group-hover:opacity-100">
         {tech.name}
       </span>
     </motion.div>
   );
-}
+});
 
 // --- Expanded detail card ---
 function DetailCard({ tech, onClose }: { tech: Tech; onClose: () => void }) {
@@ -205,20 +299,13 @@ export default function TechSpheres() {
 
   // 0 -> 1 : circle morphs to bottom arc (first 55% of scroll track)
   const morph = useTransform(scrollYProgress, [0.05, 0.55], [0, 1]);
-  const smoothMorph = useSpring(morph, { stiffness: 40, damping: 20 });
+  // Higher stiffness = spring settles in ~15 frames instead of ~60.
+  // Fewer settling frames = fewer per-frame transform computations across 30 balls.
+  const smoothMorph = useSpring(morph, { stiffness: 120, damping: 24 });
 
   // 0 -> 1 : shuffle/sweep the arc (last 45%)
   const shuffle = useTransform(scrollYProgress, [0.55, 1], [0, 1]);
-  const smoothShuffle = useSpring(shuffle, { stiffness: 40, damping: 20 });
-
-  const [morphValue, setMorphValue] = useState(0);
-  const [shuffleValue, setShuffleValue] = useState(0);
-
-  useEffect(() => {
-    const a = smoothMorph.on("change", setMorphValue);
-    const b = smoothShuffle.on("change", setShuffleValue);
-    return () => { a(); b(); };
-  }, [smoothMorph, smoothShuffle]);
+  const smoothShuffle = useSpring(shuffle, { stiffness: 120, damping: 24 });
 
   // --- Intro sequence: scatter -> line -> circle ---
   useEffect(() => {
@@ -226,6 +313,8 @@ export default function TechSpheres() {
     const t2 = setTimeout(() => setPhase("circle"), 2200);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
+
+  const isScrollActive = phase === "circle";
 
   // --- Random scatter start positions ---
   const scatterPositions = useMemo(
@@ -242,8 +331,36 @@ export default function TechSpheres() {
   // Header / hint fade as arc forms
   const introTextOpacity = useTransform(smoothMorph, [0, 0.5], [1, 0]);
 
+  const handleBallClick = useCallback((index: number) => {
+    setActiveIndex(index);
+  }, []);
+
+  const targets = useMemo(() => {
+    return TECH.map((_, i) => {
+      if (phase === "scatter") {
+        return scatterPositions[i];
+      } else if (phase === "line") {
+        const spacing = 92;
+        const totalWidth = TOTAL * spacing;
+        return { x: i * spacing - totalWidth / 2, y: 0, scale: 0.7, opacity: 1 };
+      } else {
+        // Circle geometry at start
+        const minDim = Math.min(size.width, size.height);
+        const circleRadius = Math.min(minDim * 0.36, 340);
+        const circleAngle = (i / TOTAL) * 360;
+        const circleRad = (circleAngle * Math.PI) / 180;
+        return {
+          x: Math.cos(circleRad) * circleRadius,
+          y: Math.sin(circleRad) * circleRadius,
+          scale: 1,
+          opacity: 1,
+        };
+      }
+    });
+  }, [phase, size, scatterPositions]);
+
   return (
-    <div ref={wrapRef} className="relative h-[280vh] w-full">
+    <div ref={wrapRef} className="relative h-[280vh] w-full" style={{ contain: "layout style" }}>
       <div
         ref={pinRef}
         className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden"
@@ -259,60 +376,19 @@ export default function TechSpheres() {
         </motion.div>
 
         {/* Cards */}
-        {TECH.map((t, i) => {
-          let target = { x: 0, y: 0, scale: 1, opacity: 1 };
-
-          if (phase === "scatter") {
-            target = scatterPositions[i];
-          } else if (phase === "line") {
-            const spacing = 92;
-            const totalWidth = TOTAL * spacing;
-            target = { x: i * spacing - totalWidth / 2, y: 0, scale: 0.7, opacity: 1 };
-          } else {
-            const isMobile = size.width < 768;
-            const minDim = Math.min(size.width, size.height);
-
-            // A. Circle
-            const circleRadius = Math.min(minDim * 0.36, 340);
-            const circleAngle = (i / TOTAL) * 360;
-            const circleRad = (circleAngle * Math.PI) / 180;
-            const circlePos = {
-              x: Math.cos(circleRad) * circleRadius,
-              y: Math.sin(circleRad) * circleRadius,
-            };
-
-            // B. Bottom rainbow arc (convex up)
-            const baseRadius = Math.min(size.width, size.height * 1.5);
-            const arcRadius = baseRadius * (isMobile ? 1.4 : 1.05);
-            const arcApexY = size.height * (isMobile ? 0.32 : 0.18);
-            const arcCenterY = arcApexY + arcRadius;
-
-            const spreadAngle = isMobile ? 110 : 150;
-            const startAngle = -90 - spreadAngle / 2;
-            const step = spreadAngle / (TOTAL - 1);
-
-            const maxRotation = spreadAngle * 0.8;
-            const boundedRotation = -shuffleValue * maxRotation;
-
-            const arcAngle = startAngle + i * step + boundedRotation;
-            const arcRad = (arcAngle * Math.PI) / 180;
-            const arcPos = {
-              x: Math.cos(arcRad) * arcRadius,
-              y: Math.sin(arcRad) * arcRadius + arcCenterY,
-              scale: isMobile ? 1.05 : 1.35,
-            };
-
-            // C. Morph between circle and arc
-            target = {
-              x: lerp(circlePos.x, arcPos.x, morphValue),
-              y: lerp(circlePos.y, arcPos.y, morphValue),
-              scale: lerp(1, arcPos.scale, morphValue),
-              opacity: 1,
-            };
-          }
-
-          return <Ball key={t.name + i} tech={t} target={target} onClick={() => setActiveIndex(i)} />;
-        })}
+        {TECH.map((t, i) => (
+          <Ball
+            key={t.name + i}
+            tech={t}
+            index={i}
+            smoothMorph={smoothMorph}
+            smoothShuffle={smoothShuffle}
+            size={size}
+            isScrollActive={isScrollActive}
+            introTarget={targets[i]}
+            onClick={handleBallClick}
+          />
+        ))}
       </div>
 
       {/* Expanded detail card */}

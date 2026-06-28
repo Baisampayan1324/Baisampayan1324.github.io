@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { Renderer, Program, Triangle, Mesh } from 'ogl';
-import './SideRays.css';
+import './side-rays.css';
 
 const hexToRgb = (hex: string) => {
   const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -249,7 +249,9 @@ void main() {
         cleanupFunctionRef.current = null;
       }
     };
-  }, [isVisible, speed, rayColor1, rayColor2, intensity, spread, origin, tilt, saturation, blend, falloff, opacity]);
+  // Note: dependencies array now ONLY listens to isVisible.
+  // Prop updates are applied via the second useEffect on uniforms.
+  }, [isVisible]);
 
   useEffect(() => {
     if (!uniformsRef.current) return;

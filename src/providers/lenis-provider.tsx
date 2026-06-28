@@ -17,11 +17,13 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
+    // Skip smooth scroll for users who prefer reduced motion
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     const lenis = new Lenis({
-      lerp: 0.08,
-      smoothWheel: true,
-      syncTouch: true,
-      duration: 1.15,
+      lerp: prefersReduced ? 1 : 0.11,
+      smoothWheel: !prefersReduced,
+      // syncTouch removed: causes iOS momentum scroll to fight Lenis, producing stutter on touch
     });
 
     lenisRef.current = lenis;

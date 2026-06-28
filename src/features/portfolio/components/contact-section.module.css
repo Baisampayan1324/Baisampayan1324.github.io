@@ -1,0 +1,118 @@
+.contactSectionWrapper {
+  font-family: 'Syne', sans-serif;
+  --glass-1: color-mix(in oklch, hsl(var(--foreground)) 4%, transparent);
+  --glass-2: color-mix(in oklch, hsl(var(--foreground)) 1%, transparent);
+  --glass-line: color-mix(in oklch, hsl(var(--foreground)) 10%, transparent);
+}
+
+/* ── Animated cinematic background (aurora + grid) ── */
+@keyframes contact-breathe {
+  0%   { transform: translate(-50%, -50%) scale(1);   opacity: 0.45; }
+  100% { transform: translate(-50%, -50%) scale(1.12); opacity: 0.85; }
+}
+
+.contactAurora {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 90vw;
+  height: 70%;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    color-mix(in oklch, hsl(var(--primary)) 14%, transparent) 0%,
+    color-mix(in oklch, hsl(var(--secondary)) 12%, transparent) 40%,
+    transparent 70%
+  );
+  animation: contact-breathe 8s ease-in-out infinite alternate;
+}
+
+.contactGrid {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-size: 60px 60px;
+  background-image:
+    linear-gradient(to right, color-mix(in oklch, hsl(var(--foreground)) 3%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklch, hsl(var(--foreground)) 3%, transparent) 1px, transparent 1px);
+  mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+}
+
+.contactGlass {
+  background: linear-gradient(145deg, var(--glass-1) 0%, var(--glass-2) 100%);
+  border: 1px solid var(--glass-line);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.contactInput,
+.contactTextarea {
+  font-family: 'DM Sans', sans-serif;
+  background: color-mix(in oklch, hsl(var(--background)) 60%, transparent);
+  border: 1px solid var(--glass-line);
+  color: hsl(var(--foreground));
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.contactInput::placeholder,
+.contactTextarea::placeholder {
+  color: hsl(var(--muted-foreground));
+}
+
+.contactInput:focus,
+.contactTextarea:focus {
+  outline: none;
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px color-mix(in oklch, hsl(var(--primary)) 20%, transparent);
+}
+
+.contactSend {
+  background: hsl(var(--primary));
+  color: #000;
+  transition: background 0.25s ease, opacity 0.25s ease;
+}
+.contactSend:hover:not(:disabled) { background: var(--gold-dark, #917300); }
+.contactSend:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.contactSocial {
+  background: linear-gradient(145deg, var(--glass-1) 0%, var(--glass-2) 100%);
+  border: 1px solid var(--glass-line);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: border-color 0.3s ease, color 0.3s ease, background 0.3s ease;
+}
+.contactSocial:hover {
+  border-color: color-mix(in oklch, hsl(var(--primary)) 50%, transparent);
+  color: hsl(var(--foreground));
+}
+
+/* ── Performance + responsive ── */
+/* backdrop-filter blur is GPU-heavy; drop on phones, keep solid glass look */
+@media (max-width: 768px) {
+  .contactGlass,
+  .contactSocial {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: color-mix(in oklch, hsl(var(--foreground)) 4%, transparent);
+  }
+  .contactAurora { filter: blur(50px); width: 120vw; }
+}
+
+/* ── Diagonal scrolling marquee ── */
+@keyframes contact-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.contactMarqueeTrack {
+  animation: contact-marquee 40s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contactAurora { animation: none; opacity: 0.5; }
+  .contactMarqueeTrack { animation: none; }
+}

@@ -3,58 +3,10 @@
 import Image from "next/image";
 import React, { useState, useEffect, useRef } from "react";
 import ScrollFloat from "@/components/ui/scroll-float";
+import { experiences } from "../constants/portfolio-data";
 
 const SYNE: React.CSSProperties = { fontFamily: "'Syne', sans-serif" };
 const DM: React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" };
-
-type Experience = {
-  role: string;
-  company: string;
-  location: string;
-  period: string;
-  logo: string;
-  accent: string;
-  points: string[];
-};
-
-const experiences: Experience[] = [
-  {
-    role: "AI Developer Intern",
-    company: "iWebWala",
-    location: "Vadodara",
-    period: "Jan 2026 — Apr 2026",
-    logo: "iwebwala.png",
-    accent: "#4A90D9",
-    points: [
-      "Built MailBuddy — an AI-powered email triage platform with multi-category LLM classification and confidence scoring for fully automated inbox management.",
-      "Designed stateful agentic AI pipelines using LangGraph with persistent checkpointing and human-in-the-loop (HITL) feedback loops for reliable, auditable workflows.",
-    ],
-  },
-  {
-    role: "Q&A Subject Expert (Freelance)",
-    company: "Chegg Inc.",
-    location: "Remote",
-    period: "Apr 2024 — Apr 2026",
-    logo: "Chegg.png",
-    accent: "#F59E0B",
-    points: [
-      "Solved 100+ problems across ML, Python, and DSA — debugged ML pipelines and explained complex concepts with precision and clarity for students worldwide.",
-      "Specialized in breaking down advanced topics in programming, data structures, algorithms, and theory of computation through detailed step-by-step solutions.",
-    ],
-  },
-  {
-    role: "Data Science Intern",
-    company: "Cognifyz Technologies",
-    location: "Remote",
-    period: "Feb 2025 — Apr 2025",
-    logo: "Cognifyz.png",
-    accent: "#10B981",
-    points: [
-      "Built and evaluated ML models on 20K+ row datasets, improving F1-score by 10% through systematic feature engineering and hyperparameter tuning.",
-      "Executed the full end-to-end pipeline — EDA, preprocessing, feature selection, model training, and evaluation — using Python and SQL.",
-    ],
-  },
-];
 
 // --- Custom Hook for Scroll Animation ---
 const useScrollAnimation = () => {
@@ -91,17 +43,10 @@ const AnimatedHeader = () => {
     <header className="mx-auto max-w-4xl px-4 sm:px-6 md:px-12 pt-16 sm:pt-20 md:pt-24 pb-4 mb-8 text-center">
       <div
         ref={headerRef}
-        className={`transition-all duration-700 ease-out ${
-          headerInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+        className={`transition-transform duration-700 ease-out ${
+          headerInView ? "translate-y-0" : "translate-y-6"
         }`}
-        style={{ transformStyle: "preserve-3d" }}
       >
-        <p
-          className="mb-4 text-xs font-bold uppercase tracking-[0.22em] text-primary sm:mb-5"
-          style={SYNE}
-        >
-          Experience
-        </p>
         <ScrollFloat containerClassName="text-foreground" textClassName="text-foreground">
           Applied AI &amp; data science experience
         </ScrollFloat>
@@ -121,13 +66,13 @@ export function ExperienceStack() {
           <div
             key={exp.company}
             // The sticky class makes the card stick to the top of the container.
-            className={`w-full relative rounded-2xl border border-white/10 bg-[#16181f] p-6 sm:p-8 md:p-12 mb-16 sticky shadow-[0_20px_60px_-20px_rgba(0,0,0,0.8)] transition-transform duration-500 hover:scale-[1.02] ${
+            className={`w-full relative rounded-2xl p-6 sm:p-8 md:p-12 mb-16 sticky shadow-[0_20px_60px_-20px_rgba(0,0,0,0.8)] transition-transform duration-500 hover:scale-[1.02] ${
               index % 3 === 0 ? "-rotate-1" : index % 3 === 1 ? "rotate-2" : "-rotate-2"
             }`}
-            // All cards will stick at slightly different offsets, creating a cascading stack.
-            style={{ 
-              top: `calc(150px + ${index * 16}px)`, 
-              borderTop: `2px solid ${exp.accent}50`
+            style={{
+              top: `calc(150px + ${index * 16}px)`,
+              background: `color-mix(in oklch, ${exp.accent} 6%, #16181f)`,
+              border: `1px solid color-mix(in oklch, ${exp.accent} 22%, transparent)`,
             }}
           >
             {/* logo + period row */}
@@ -138,6 +83,7 @@ export function ExperienceStack() {
                   alt={`${exp.company} logo`}
                   width={40}
                   height={40}
+                  loading="lazy"
                   className="h-10 w-10 object-contain"
                 />
               </div>
