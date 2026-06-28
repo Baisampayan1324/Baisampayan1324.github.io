@@ -1,7 +1,10 @@
 import Image from 'next/image';
 import FlowArt, { FlowSection } from '@/components/ui/flow-art';
+<<<<<<< HEAD:src/features/portfolio/components/education.tsx
 import SideRays from '@/components/ui/side-rays';
 import { education } from '../constants/portfolio-data';
+=======
+>>>>>>> 217ae263a909f5121faca64849ca4d6786812882:src/components/sections/education.tsx
 
 const SYNE: React.CSSProperties = { fontFamily: "'Syne', sans-serif" };
 const DM: React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" };
@@ -12,7 +15,6 @@ export default function Education() {
   return (
     <div id="education" className="relative w-full">
       <div className="absolute top-0 right-0 w-full md:w-1/2 h-full pointer-events-none mix-blend-screen opacity-70 z-10">
-        <SideRays origin="top-right" rayColor1="#FFC000" rayColor2="#ff9900" />
       </div>
       <FlowArt aria-label="Education timeline">
         {education.map((entry, i) => (
