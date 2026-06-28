@@ -10,7 +10,7 @@
   row-gap: 0;
   font-family: 'Syne', sans-serif;
   /* section heading */
-  font-size: clamp(1.8rem, 4.5vw, 3.6rem);
+  font-size: clamp(1.35rem, 3.2vw, 2.5rem);
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: -0.01em;

@@ -1,41 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { useRef, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { useState } from "react";
+import { motion } from "framer-motion";
 import ScrollFloat from "@/components/ui/scroll-float";
 import { socials, EMAIL_TO } from "../constants/portfolio-data";
 import styles from "./contact-section.module.css";
 
 const MAX = 500;
-
-// 8 decorative SVG paths with opacity-only animation (no paint triggers).
-// Previously 24 paths with pathLength+pathOffset — those force repaint each frame.
-function FloatingPaths({ position }: { position: number }) {
-  const paths = Array.from({ length: 8 }, (_, i) => ({
-    id: i,
-    d: `M-${380 - i * 15 * position} -${189 + i * 18}C-${380 - i * 15 * position} -${189 + i * 18} -${312 - i * 15 * position} ${216 - i * 18} ${152 - i * 15 * position} ${343 - i * 18}C${616 - i * 15 * position} ${470 - i * 18} ${684 - i * 15 * position} ${875 - i * 18} ${684 - i * 15 * position} ${875 - i * 18}`,
-    width: 0.4 + i * 0.08,
-    opacity: 0.04 + i * 0.04,
-    duration: 14 + i * 3,
-  }));
-
-  return (
-    <svg className="absolute inset-0 w-full h-full text-foreground" viewBox="0 0 696 316" fill="none" preserveAspectRatio="xMidYMid slice">
-      {paths.map((path) => (
-        <motion.path
-          key={path.id}
-          d={path.d}
-          stroke="currentColor"
-          strokeWidth={path.width}
-          initial={{ opacity: path.opacity * 0.5 }}
-          animate={{ opacity: [path.opacity * 0.5, path.opacity, path.opacity * 0.5] }}
-          transition={{ duration: path.duration, repeat: Infinity, ease: "easeInOut" }}
-        />
-      ))}
-    </svg>
-  );
-}
 
 const MarqueeItem = () => (
   <div className="flex items-center space-x-12 px-6">
@@ -86,26 +58,10 @@ function FlipLink({ children, href }: { children: string; href: string }) {
 }
 
 export function ContactSection() {
-  const ref = useRef<HTMLElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
-  const prefersReduced = useReducedMotion();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<string | null>(null);
-
-  React.useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsVisible(entry.isIntersecting);
-      },
-      { threshold: 0.01 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
 
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const canSend = name.trim() !== "" && emailValid && message.trim() !== "";
@@ -125,20 +81,11 @@ export function ContactSection() {
   return (
     <section
       id="contact"
-      ref={ref}
       className={`${styles.contactSectionWrapper} relative w-full overflow-x-clip bg-background text-foreground border-t border-border/50`}
     >
-      {/* Cinematic animated background (aurora + grid + flowing paths) */}
+      {/* Cinematic animated background (aurora + grid) */}
       <div className={styles.contactAurora} aria-hidden />
       <div className={styles.contactGrid} aria-hidden />
-      
-      {/* paths bleed a little above the section top — hidden when reduced motion is preferred */}
-      {isVisible && !prefersReduced && (
-        <div className="hidden md:block absolute inset-x-0 -top-[14vh] bottom-0 z-0 pointer-events-none" aria-hidden>
-          <FloatingPaths position={1} />
-          <FloatingPaths position={-1} />
-        </div>
-      )}
 
       {/* Diagonal scrolling marquee */}
       <div className="relative z-10 mt-12 sm:mt-14 w-full overflow-hidden border-y border-border/50 bg-background/60 backdrop-blur-md py-4 -rotate-1 sm:-rotate-2 scale-[1.05] sm:scale-110 shadow-2xl">

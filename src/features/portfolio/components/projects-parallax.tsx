@@ -157,20 +157,20 @@ export function ProjectsParallax() {
 
   return (
     <section id="projects" className="relative w-full bg-background px-4 py-16 sm:px-6 sm:py-20 md:px-12 md:py-24 border-t border-border/50">
-      <header className="mx-auto mb-10 max-w-7xl md:mb-12">
+      <header className="relative z-10 mx-auto mb-10 max-w-7xl md:mb-12">
         <ScrollFloat containerClassName="text-foreground" textClassName="text-foreground">
-          Selected AI projects and production systems
+          Projects
         </ScrollFloat>
       </header>
 
-      <div className="mx-auto flex max-w-7xl flex-col gap-16 sm:gap-20 md:gap-0">
+      <div className="relative z-10 mx-auto flex max-w-7xl flex-col gap-16 sm:gap-20 md:gap-0">
         {featuredProjects.map((project, index) => (
           <ProjectRow key={project.title} project={project} index={index} />
         ))}
       </div>
 
       {/* View More */}
-      <div className="mx-auto mt-14 flex max-w-7xl justify-center md:mt-16">
+      <div className="relative z-10 mx-auto mt-14 flex max-w-7xl justify-center md:mt-16">
         <Link
           href="/projects"
           prefetch={true}

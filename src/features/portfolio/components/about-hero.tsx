@@ -43,7 +43,7 @@ export function AboutHero({ avatar }: AboutHeroProps) {
         <div>
           <div>
             <ScrollFloat containerClassName="mb-6 sm:mb-8" textClassName="text-foreground">
-              AI / ML developer building production ready systems
+              About Me
             </ScrollFloat>
 
             <div className="my-6 h-1 w-16 bg-primary sm:my-7 sm:w-20" />
@@ -57,6 +57,16 @@ export function AboutHero({ avatar }: AboutHeroProps) {
               building end-to-end AI solutions including RAG pipelines, LLM-based applications,
               and real-time inference systems. My passion lies in creating intelligent systems
               that solve complex real-world challenges and deliver production-ready results.
+            </p>
+            <p
+              className="mb-6 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base"
+              style={DM}
+            >
+              I enjoy taking an idea all the way from research and prototyping to a deployed,
+              reliable product — designing data pipelines, fine-tuning models, and wrapping them
+              in clean APIs and interfaces. Alongside my AI work, I&apos;ve solved 300+ DSA
+              problems and love exploring new tools, frameworks, and ideas. I&apos;m always
+              open to collaborating on ambitious projects and learning something new along the way.
             </p>
           </div>
         </div>

@@ -1,25 +1,22 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { AnimatePresence, motion, useTransform, useSpring, useScroll } from "framer-motion";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { AnimatePresence, motion, useTransform, useSpring, useScroll, MotionValue } from "framer-motion";
 
 // --- Types ---
-type Phase = "scatter" | "line" | "circle";
-
 type Tech = { name: string; icon: string; desc: string; usage: string };
 
 interface BallProps {
   tech: Tech;
   index: number;
-  smoothMorph: any;
-  smoothShuffle: any;
+  smoothMorph: MotionValue<number>;
+  smoothShuffle: MotionValue<number>;
   size: { width: number; height: number };
-  isScrollActive: boolean;
-  introTarget: { x: number; y: number; scale: number; opacity: number };
+  entered: boolean;
   onClick: (index: number) => void;
 }
 
-// --- Card Component (trigger) ---
+// --- Card geometry ---
 const CARD_W = 78; // px
 const CARD_H = 94; // px
 
@@ -31,15 +28,13 @@ const Ball = React.memo(function Ball({
   smoothMorph,
   smoothShuffle,
   size,
-  isScrollActive,
-  introTarget,
+  entered,
   onClick,
 }: BallProps) {
-  // Pre-calculate static geometry layout params
   const isMobile = size.width < 768;
   const minDim = Math.min(size.width, size.height);
 
-  // A. Circle geometry
+  // A. Circle geometry (resting state)
   const circleRadius = Math.min(minDim * 0.36, 340);
   const circleAngle = (index / TOTAL) * 360;
   const circleRad = (circleAngle * Math.PI) / 180;
@@ -58,7 +53,7 @@ const Ball = React.memo(function Ball({
   const maxRotation = spreadAngle * 0.8;
   const scaleEnd = isMobile ? 1.05 : 1.35;
 
-  // Scroll-linked Framer Motion transform hooks
+  // Scroll-linked transforms: circle -> arc (morph), then sweep left-to-right (shuffle).
   const x = useTransform([smoothMorph, smoothShuffle], ([latestMorph, latestShuffle]) => {
     const boundedRotation = -(latestShuffle as number) * maxRotation;
     const arcAngle = startAngle + index * step + boundedRotation;
@@ -75,52 +70,9 @@ const Ball = React.memo(function Ball({
     return lerp(circleY, arcY, latestMorph as number);
   });
 
-  const scale = useTransform(smoothMorph, (latestMorph) => {
-    return lerp(1, scaleEnd, latestMorph as number);
-  });
+  const scale = useTransform(smoothMorph, (latestMorph) => lerp(1, scaleEnd, latestMorph as number));
 
-  const handleClick = useCallback(() => {
-    onClick(index);
-  }, [onClick, index]);
-
-  if (!isScrollActive) {
-    return (
-      <motion.div
-        animate={{
-          x: introTarget.x,
-          y: introTarget.y,
-          scale: introTarget.scale,
-          opacity: introTarget.opacity,
-        }}
-        transition={{ type: "spring", stiffness: 40, damping: 15 }}
-        style={{
-          position: "absolute",
-          left: "50%",
-          top: "50%",
-          width: CARD_W,
-          height: CARD_H,
-          marginLeft: -CARD_W / 2,
-          marginTop: -CARD_H / 2,
-        }}
-        className="group cursor-pointer"
-        onClick={handleClick}
-      >
-        <div className="relative flex h-full w-full items-center justify-center rounded-2xl bg-white p-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.18)] ring-1 ring-black/10 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-[0_16px_40px_rgba(0,0,0,0.3)]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={ico(tech.icon)}
-            alt={tech.name}
-            loading="lazy"
-            className="h-[78%] w-[78%] object-contain transition-transform duration-300 group-hover:scale-110"
-            draggable={false}
-          />
-        </div>
-        <span className="pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-background opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-          {tech.name}
-        </span>
-      </motion.div>
-    );
-  }
+  const handleClick = useCallback(() => onClick(index), [onClick, index]);
 
   return (
     <motion.div
@@ -139,18 +91,28 @@ const Ball = React.memo(function Ball({
       className="group cursor-pointer"
       onClick={handleClick}
     >
-      <div className="relative flex h-full w-full items-center justify-center rounded-2xl bg-white p-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.18)] ring-1 ring-black/10 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-[0_16px_40px_rgba(0,0,0,0.3)]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={ico(tech.icon)}
-          alt={tech.name}
-          className="h-[78%] w-[78%] object-contain transition-transform duration-300 group-hover:scale-110"
-          draggable={false}
-        />
-      </div>
-      <span className="pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-background opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-        {tech.name}
-      </span>
+      {/* Inner wrapper handles the staggered entrance fade — kept separate from the
+          scroll transforms above so the two never fight over the same properties. */}
+      <motion.div
+        className="relative h-full w-full"
+        initial={{ opacity: 0, scale: 0.6 }}
+        animate={{ opacity: entered ? 1 : 0, scale: entered ? 1 : 0.6 }}
+        transition={{ type: "spring", stiffness: 60, damping: 16, delay: index * 0.02 }}
+      >
+        <div className="relative flex h-full w-full items-center justify-center rounded-2xl bg-white p-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.18)] ring-1 ring-black/10 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-[0_16px_40px_rgba(0,0,0,0.3)]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={ico(tech.icon)}
+            alt={tech.name}
+            loading="lazy"
+            className="h-[78%] w-[78%] object-contain transition-transform duration-300 group-hover:scale-110"
+            draggable={false}
+          />
+        </div>
+        <span className="pointer-events-none absolute left-1/2 top-full mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-background opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+          {tech.name}
+        </span>
+      </motion.div>
     </motion.div>
   );
 });
@@ -241,13 +203,13 @@ const TECH: Tech[] = [
   { name: "TensorFlow", icon: "logos/tensorflow", desc: "ML Framework", usage: "Building and training deep-learning models for vision and NLP experiments." },
   { name: "PyTorch", icon: "logos/pytorch-icon", desc: "ML Framework", usage: "My go-to for research-style model building, fine-tuning, and custom training loops." },
   { name: "Keras", icon: "simple-icons/keras?color=%23D00000", desc: "Deep Learning", usage: "Fast prototyping of neural networks on top of TensorFlow." },
-  { name: "SciPy", icon: "logos/scipy", desc: "Scientific", usage: "Scientific computing and optimization inside data pipelines." },
+  { name: "SciPy", icon: "simple-icons/scipy?color=%238CAAE6", desc: "Scientific", usage: "Scientific computing and optimization inside data pipelines." },
   { name: "NumPy", icon: "logos/numpy", desc: "Arrays", usage: "Vectorized array math at the core of every preprocessing step." },
   { name: "Pandas", icon: "logos/pandas-icon", desc: "Data", usage: "Data wrangling, cleaning, and feature engineering on tabular datasets." },
   { name: "Matplotlib", icon: "logos/matplotlib-icon", desc: "Plotting", usage: "Visualizing metrics, distributions, and model results." },
   { name: "Hugging Face", icon: "logos/hugging-face-icon", desc: "Models", usage: "Pretrained transformers and datasets for LLM and NLP applications." },
   { name: "LangChain", icon: "simple-icons/langchain?color=%231C3C3C", desc: "LLM Apps", usage: "Orchestrating RAG pipelines, agents, and multi-LLM workflows." },
-  { name: "Scikit-Learn", icon: "logos/scikit-learn", desc: "ML", usage: "Classic ML — regression, classification, clustering, and evaluation." },
+  { name: "Scikit-Learn", icon: "simple-icons/scikitlearn?color=%23F7931E", desc: "ML", usage: "Classic ML — regression, classification, clustering, and evaluation." },
   { name: "FastAPI", icon: "logos/fastapi-icon", desc: "API", usage: "Serving ML models and building production REST APIs with real-time inference." },
   { name: "Streamlit", icon: "logos/streamlit", desc: "Apps", usage: "Shipping quick interactive demos and data apps." },
   { name: "Node.js", icon: "logos/nodejs-icon", desc: "Runtime", usage: "JavaScript runtime for tooling and full-stack glue." },
@@ -262,7 +224,7 @@ const TECH: Tech[] = [
   { name: "Git", icon: "logos/git-icon", desc: "VCS", usage: "Version control on every project." },
   { name: "GitHub", icon: "simple-icons/github?color=%23000000", desc: "Code Host", usage: "Hosting code, CI, and collaboration." },
   { name: "VS Code", icon: "logos/visual-studio-code", desc: "Editor", usage: "Daily-driver editor for all development." },
-  { name: "Anaconda", icon: "logos/anaconda-icon", desc: "Env", usage: "Managing Python environments and ML dependencies." },
+  { name: "Anaconda", icon: "simple-icons/anaconda?color=%2344A833", desc: "Env", usage: "Managing Python environments and ML dependencies." },
 ];
 
 const TOTAL = TECH.length;
@@ -270,8 +232,8 @@ const TOTAL = TECH.length;
 const lerp = (start: number, end: number, t: number) => start * (1 - t) + end * t;
 
 export default function TechSpheres() {
-  const [phase, setPhase] = useState<Phase>("scatter");
   const [size, setSize] = useState({ width: 0, height: 0 });
+  const [entered, setEntered] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const wrapRef = useRef<HTMLDivElement>(null); // tall scroll track
@@ -291,73 +253,34 @@ export default function TechSpheres() {
     return () => observer.disconnect();
   }, []);
 
-  // --- Scroll-driven morph (no wheel hijacking — natural page scroll) ---
+  // --- Entrance: fade the circle in once we know the stage size (no scatter/line) ---
+  useEffect(() => {
+    if (size.width > 0 && !entered) {
+      const t = setTimeout(() => setEntered(true), 150);
+      return () => clearTimeout(t);
+    }
+  }, [size.width, entered]);
+
+  // --- Scroll-driven morph (natural page scroll, reversible both directions) ---
   const { scrollYProgress } = useScroll({
     target: wrapRef,
     offset: ["start start", "end end"],
   });
 
-  // 0 -> 1 : circle morphs to bottom arc (first 55% of scroll track)
+  // 0 -> 1 : circle morphs to bottom arc (first 55% of the scroll track)
   const morph = useTransform(scrollYProgress, [0.05, 0.55], [0, 1]);
-  // Higher stiffness = spring settles in ~15 frames instead of ~60.
-  // Fewer settling frames = fewer per-frame transform computations across 30 balls.
   const smoothMorph = useSpring(morph, { stiffness: 120, damping: 24 });
 
-  // 0 -> 1 : shuffle/sweep the arc (last 45%)
+  // 0 -> 1 : sweep the arc left-to-right (last 45%)
   const shuffle = useTransform(scrollYProgress, [0.55, 1], [0, 1]);
   const smoothShuffle = useSpring(shuffle, { stiffness: 120, damping: 24 });
 
-  // --- Intro sequence: scatter -> line -> circle ---
-  useEffect(() => {
-    const t1 = setTimeout(() => setPhase("line"), 450);
-    const t2 = setTimeout(() => setPhase("circle"), 2200);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, []);
-
-  const isScrollActive = phase === "circle";
-
-  // --- Random scatter start positions ---
-  const scatterPositions = useMemo(
-    () =>
-      TECH.map(() => ({
-        x: (Math.random() - 0.5) * 1400,
-        y: (Math.random() - 0.5) * 900,
-        scale: 0.5,
-        opacity: 0,
-      })),
-    []
-  );
-
-  // Header / hint fade as arc forms
-  const introTextOpacity = useTransform(smoothMorph, [0, 0.5], [1, 0]);
+  // Hint fades out as the arc forms.
+  const hintOpacity = useTransform(smoothMorph, [0, 0.5], [1, 0]);
 
   const handleBallClick = useCallback((index: number) => {
     setActiveIndex(index);
   }, []);
-
-  const targets = useMemo(() => {
-    return TECH.map((_, i) => {
-      if (phase === "scatter") {
-        return scatterPositions[i];
-      } else if (phase === "line") {
-        const spacing = 92;
-        const totalWidth = TOTAL * spacing;
-        return { x: i * spacing - totalWidth / 2, y: 0, scale: 0.7, opacity: 1 };
-      } else {
-        // Circle geometry at start
-        const minDim = Math.min(size.width, size.height);
-        const circleRadius = Math.min(minDim * 0.36, 340);
-        const circleAngle = (i / TOTAL) * 360;
-        const circleRad = (circleAngle * Math.PI) / 180;
-        return {
-          x: Math.cos(circleRad) * circleRadius,
-          y: Math.sin(circleRad) * circleRadius,
-          scale: 1,
-          opacity: 1,
-        };
-      }
-    });
-  }, [phase, size, scatterPositions]);
 
   return (
     <div ref={wrapRef} className="relative h-[280vh] w-full" style={{ contain: "layout style" }}>
@@ -365,9 +288,9 @@ export default function TechSpheres() {
         ref={pinRef}
         className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden"
       >
-        {/* Intro hint (fades as morph begins) */}
+        {/* Hint (fades as the morph begins) */}
         <motion.div
-          style={{ opacity: introTextOpacity }}
+          style={{ opacity: hintOpacity }}
           className="pointer-events-none absolute top-4 z-0 flex flex-col items-center text-center"
         >
           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
@@ -384,8 +307,7 @@ export default function TechSpheres() {
             smoothMorph={smoothMorph}
             smoothShuffle={smoothShuffle}
             size={size}
-            isScrollActive={isScrollActive}
-            introTarget={targets[i]}
+            entered={entered}
             onClick={handleBallClick}
           />
         ))}

@@ -42,17 +42,27 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
 
     ScrollTrigger.refresh();
 
-    // Scroll to hash if present in URL (e.g. /#projects)
+    // Scroll to hash if present in URL (e.g. /#projects). The home page has a
+    // heavy hero and tall sections that finish laying out after mount, which
+    // shifts the target's position — so a single early scroll lands at the top.
+    // We retry over the first ~1.5s and again on window load to land reliably.
+    let hashTimers: ReturnType<typeof setTimeout>[] = [];
+    let scrollToHash: (() => void) | null = null;
     if (typeof window !== 'undefined' && window.location.hash) {
-      setTimeout(() => {
-        const target = document.querySelector(window.location.hash);
+      const hash = window.location.hash;
+      scrollToHash = () => {
+        const target = document.querySelector(hash);
         if (target) {
-          lenis.scrollTo(target as HTMLElement, { immediate: true });
+          lenis.scrollTo(target as HTMLElement, { immediate: true, force: true });
         }
-      }, 100);
+      };
+      hashTimers = [80, 300, 600, 1000, 1500].map((d) => setTimeout(scrollToHash as () => void, d));
+      window.addEventListener('load', scrollToHash);
     }
 
     return () => {
+      hashTimers.forEach(clearTimeout);
+      if (scrollToHash) window.removeEventListener('load', scrollToHash);
       lenis.off('scroll', onScroll);
       gsap.ticker.remove(raf);
       lenis.destroy();

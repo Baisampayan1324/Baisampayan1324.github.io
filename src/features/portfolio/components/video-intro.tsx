@@ -17,6 +17,7 @@ export default function VideoIntro() {
   const [isMuted, setIsMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
   const hasInteracted = useRef(false);
+  const didInit = useRef(false);
   const [nameSettled, setNameSettled] = useState(true);
   const [currentJobIndex, setCurrentJobIndex] = useState(0);
 
@@ -78,19 +79,43 @@ export default function VideoIntro() {
     return () => observer.disconnect();
   }, []);
 
-  // Auto-mute/unmute and pause/play when entering/leaving the hero section
+  // On mount, try to autoplay WITH sound. Browsers allow this for visitors who
+  // have engaged with the site before (so the owner hears audio right away). If
+  // it's blocked, fall back to muted autoplay (so the video never freezes) and
+  // wait for a user gesture to turn sound on.
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
+    v.volume = 1;
+    v.muted = false;
+    v.play()
+      .then(() => {
+        hasInteracted.current = true;
+        setIsMuted(false);
+        setIsPlaying(true);
+      })
+      .catch(() => {
+        v.muted = true;
+        setIsMuted(true);
+        void v.play().catch(() => {});
+      });
+  }, []);
+
+  // Pause/mute when scrolled past the hero, resume when back. Skips the very
+  // first run so it doesn't clobber the sound-first attempt above on mount.
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (!didInit.current) {
+      didInit.current = true;
+      return;
+    }
     if (pastHero) {
       v.muted = true;
       try { v.pause(); } catch (_) {}
       setIsMuted(true);
       setIsPlaying(false);
     } else {
-      // Re-entering the hero: resume playback. Only restore sound if the user
-      // has already interacted — otherwise the browser blocks playback and the
-      // video freezes.
       const muted = !hasInteracted.current;
       v.muted = muted;
       v.volume = muted ? 0 : 1;
@@ -100,8 +125,8 @@ export default function VideoIntro() {
     }
   }, [pastHero]);
 
-  // Unmute the hero video on the first user gesture (browsers block unmuted
-  // autoplay, so we start muted and switch on as soon as we're allowed).
+  // Fallback for browsers that blocked sound-on autoplay: turn audio on at the
+  // first real user gesture (click/tap/key — scrolling alone doesn't qualify).
   useEffect(() => {
     const unmute = () => {
       if (hasInteracted.current) return;
@@ -114,13 +139,13 @@ export default function VideoIntro() {
         void v.play().catch(() => {});
       }
     };
-    window.addEventListener('pointerdown', unmute, { once: true });
-    window.addEventListener('keydown', unmute, { once: true });
-    window.addEventListener('touchstart', unmute, { once: true });
+    window.addEventListener('pointerdown', unmute);
+    window.addEventListener('keydown', unmute);
+    window.addEventListener('touchend', unmute);
     return () => {
       window.removeEventListener('pointerdown', unmute);
       window.removeEventListener('keydown', unmute);
-      window.removeEventListener('touchstart', unmute);
+      window.removeEventListener('touchend', unmute);
     };
   }, [pastHero]);
 
@@ -220,7 +245,7 @@ export default function VideoIntro() {
             <div className="mb-2 flex whitespace-nowrap" style={{ fontFamily: '"Haglos", sans-serif' }}>
               <SplitText
                 text="Baisampayan Dey"
-                className="text-7xl md:text-9xl text-yellow-400 drop-shadow-xl"
+                className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl text-yellow-400 drop-shadow-xl"
                 delay={50}
                 duration={1.25}
                 ease="power3.out"
