@@ -157,7 +157,7 @@ export default function VideoIntro() {
         muted={isMuted}
         loop
         playsInline
-        preload="metadata"
+        preload="auto"
       />
 
       {/* ── Cinematic gradient overlays ── */}
