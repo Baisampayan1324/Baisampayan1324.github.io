@@ -1,6 +1,5 @@
 "use client";
 import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import DotField from '@/components/ui/dot-field';
@@ -18,7 +17,6 @@ export const CircularProjects = ({
   projects,
   autoplay = true,
 }: CircularProjectsProps) => {
-  const router = useRouter();
   const [activeIndex, setActiveIndex] = useState(0);
   const [containerWidth, setContainerWidth] = useState(1200);
 
@@ -59,6 +57,14 @@ export const CircularProjects = ({
     setActiveIndex((prev) => (prev - 1 + projectsLength) % projectsLength);
     if (autoplayIntervalRef.current) clearInterval(autoplayIntervalRef.current);
   }, [projectsLength]);
+
+  const handleBack = useCallback(() => {
+    // Always return to the projects section on the home page. We navigate
+    // explicitly (rather than router.back(), which can land on whatever page —
+    // e.g. Google — the user visited before this one). A full navigation lets
+    // the home page's Lenis hash-scroll restore the #projects section.
+    window.location.href = '/#projects';
+  }, []);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -140,7 +146,7 @@ export const CircularProjects = ({
 
       {/* Back button — top-left corner */}
       <button
-        onClick={() => router.push('/#projects')}
+        onClick={handleBack}
         aria-label="Go back to projects"
         className="fixed top-8 left-8 z-50 flex items-center gap-2 px-6 py-2 rounded-full bg-black/50 border border-white text-white hover:bg-white/10 backdrop-blur-md transition-colors cursor-pointer"
       >

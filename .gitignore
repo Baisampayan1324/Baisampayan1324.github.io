@@ -63,6 +63,8 @@ Thumbs.db
 # AG Kit and Agent Files
 .agents/
 .claude/
+.continue/
+.qwen/
 
 # AG Kit Skills
 skills-lock.json

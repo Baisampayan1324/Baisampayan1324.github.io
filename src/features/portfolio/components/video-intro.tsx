@@ -12,9 +12,11 @@ export default function VideoIntro() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
 
-  // Default to false as requested by user to hear voice immediately
-  const [isMuted, setIsMuted] = useState(false);
+  // Must start muted: browsers block autoplay of videos that have sound, which
+  // freezes the video on its first frame. We unmute on the first user gesture.
+  const [isMuted, setIsMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
+  const hasInteracted = useRef(false);
   const [nameSettled, setNameSettled] = useState(true);
   const [currentJobIndex, setCurrentJobIndex] = useState(0);
 
@@ -35,6 +37,7 @@ export default function VideoIntro() {
   const handleMuteToggle = () => {
     const v = videoRef.current;
     if (!v) return;
+    hasInteracted.current = true;
     const next = !isMuted;
     v.muted = next;
     v.volume = next ? 0 : 1;
@@ -85,12 +88,40 @@ export default function VideoIntro() {
       setIsMuted(true);
       setIsPlaying(false);
     } else {
-      v.muted = false;
-      v.volume = 1;
+      // Re-entering the hero: resume playback. Only restore sound if the user
+      // has already interacted — otherwise the browser blocks playback and the
+      // video freezes.
+      const muted = !hasInteracted.current;
+      v.muted = muted;
+      v.volume = muted ? 0 : 1;
       void v.play().catch(() => {});
-      setIsMuted(false);
+      setIsMuted(muted);
       setIsPlaying(true);
     }
+  }, [pastHero]);
+
+  // Unmute the hero video on the first user gesture (browsers block unmuted
+  // autoplay, so we start muted and switch on as soon as we're allowed).
+  useEffect(() => {
+    const unmute = () => {
+      if (hasInteracted.current) return;
+      hasInteracted.current = true;
+      const v = videoRef.current;
+      if (v && !pastHero) {
+        v.muted = false;
+        v.volume = 1;
+        setIsMuted(false);
+        void v.play().catch(() => {});
+      }
+    };
+    window.addEventListener('pointerdown', unmute, { once: true });
+    window.addEventListener('keydown', unmute, { once: true });
+    window.addEventListener('touchstart', unmute, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', unmute);
+      window.removeEventListener('keydown', unmute);
+      window.removeEventListener('touchstart', unmute);
+    };
   }, [pastHero]);
 
   // Clean up on unmount so audio/video doesn't keep playing in the background

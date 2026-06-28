@@ -1,10 +1,6 @@
 import Image from 'next/image';
 import FlowArt, { FlowSection } from '@/components/ui/flow-art';
-<<<<<<< HEAD:src/features/portfolio/components/education.tsx
-import SideRays from '@/components/ui/side-rays';
 import { education } from '../constants/portfolio-data';
-=======
->>>>>>> 217ae263a909f5121faca64849ca4d6786812882:src/components/sections/education.tsx
 
 const SYNE: React.CSSProperties = { fontFamily: "'Syne', sans-serif" };
 const DM: React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" };
