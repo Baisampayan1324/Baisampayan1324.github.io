@@ -36,8 +36,9 @@ export default function VideoIntro() {
     node.playsInline = true;
   }, []);
 
-  // Force muted autoplay with retries across media events. Muted playback is
-  // always permitted, so this reliably un-freezes the video on production.
+  // Force muted autoplay with retries. Muted playback is always permitted, so
+  // this reliably un-freezes the video on production. Poll briefly in case the
+  // media events already fired before this effect attached (cached video).
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
@@ -45,15 +46,19 @@ export default function VideoIntro() {
     const playMuted = () => {
       if (inAboutRef.current) return;
       v.muted = !unmutedRef.current;
-      v.play().catch(() => {});
+      const p = v.play();
+      if (p) p.catch(() => {});
     };
 
     playMuted();
     v.addEventListener('loadeddata', playMuted);
     v.addEventListener('canplay', playMuted);
+    // Safety net: retry a few times after mount regardless of events.
+    const retries = [100, 400, 1000, 2500].map((d) => setTimeout(playMuted, d));
     return () => {
       v.removeEventListener('loadeddata', playMuted);
       v.removeEventListener('canplay', playMuted);
+      retries.forEach(clearTimeout);
     };
   }, []);
 
@@ -88,8 +93,10 @@ export default function VideoIntro() {
     if (!about) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        const inAbout =
-          entry.isIntersecting || entry.boundingClientRect.top < 0;
+        // Only react to About actually being on screen. Avoid the
+        // boundingClientRect.top<0 trick — it can falsely pause at mount when
+        // the browser restores a scroll position.
+        const inAbout = entry.isIntersecting;
         inAboutRef.current = inAbout;
         setPastHero(inAbout);
         const v = videoRef.current;
