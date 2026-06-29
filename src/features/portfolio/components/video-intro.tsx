@@ -45,7 +45,7 @@ export default function VideoIntro() {
     if (!v) return;
     const play = () => {
       if (pastHeroRef.current) return;
-      v.muted = true;
+      v.muted = mutedRef.current;
       const p = v.play();
       if (p) p.catch(() => {});
     };
@@ -58,28 +58,29 @@ export default function VideoIntro() {
     };
   }, []);
 
-  // Pause to save resources only when About is genuinely on screen; resume in
-  // hero. Always muted — no audio toggling, no gesture, nothing that can stall.
+  // Play video + audio ONLY while the hero is on screen. Watch the hero
+  // section itself (not #about) — otherwise scrolling through Projects/Contact
+  // would resume the off-screen video and make audio come and go.
   useEffect(() => {
-    const about = document.getElementById('about');
-    if (!about) return;
+    const hero = sectionRef.current;
+    if (!hero) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        const inAbout = entry.isIntersecting;
-        pastHeroRef.current = inAbout;
-        setPastHero(inAbout);
+        const inHero = entry.isIntersecting;
+        pastHeroRef.current = !inHero;
+        setPastHero(!inHero);
         const v = videoRef.current;
         if (!v) return;
-        if (inAbout) {
-          v.pause();
-        } else {
+        if (inHero) {
           v.muted = mutedRef.current;
           v.play().catch(() => {});
+        } else {
+          v.pause(); // stops video AND audio when hero leaves view
         }
       },
-      { threshold: 0.15 }
+      { threshold: 0.4 }
     );
-    observer.observe(about);
+    observer.observe(hero);
     return () => observer.disconnect();
   }, []);
 
