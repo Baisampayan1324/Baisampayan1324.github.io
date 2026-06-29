@@ -75,26 +75,18 @@ export default function VideoIntro() {
     return () => observer.disconnect();
   }, []);
 
-  // On mount, try to autoplay WITH sound. Browsers allow this for visitors who
-  // have engaged with the site before (so the owner hears audio right away). If
-  // it's blocked, fall back to muted autoplay (so the video never freezes) and
-  // wait for a user gesture to turn sound on.
+  // On mount, autoplay MUTED. Muted autoplay is the only kind every browser
+  // permits unconditionally, so the video reliably starts and keeps looping
+  // instead of freezing on frame 1 when a sound-on autoplay attempt gets
+  // blocked. Sound turns on at the first user gesture (see the unmute effect) —
+  // which is required by browser policy no matter what we do here.
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-    v.volume = 1;
-    v.muted = false;
-    v.play()
-      .then(() => {
-        hasInteracted.current = true;
-        setIsMuted(false);
-        setIsPlaying(true);
-      })
-      .catch(() => {
-        v.muted = true;
-        setIsMuted(true);
-        void v.play().catch(() => {});
-      });
+    v.muted = true;
+    setIsMuted(true);
+    setIsPlaying(true);
+    v.play().catch(() => {});
   }, []);
 
   // Pause/mute when scrolled past the hero, resume when back. Skips the very

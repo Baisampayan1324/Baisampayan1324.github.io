@@ -37,10 +37,13 @@ export default function Education() {
               </p>
             </div>
 
-            {/* Bottom: the card + watermark */}
-            <div className="relative">
+            {/* Bottom: the card + watermark. Odd entries sit on the right so
+                the panel and its enter-from-right swing line up. */}
+            <div className={`relative flex ${i % 2 === 1 ? 'justify-end' : 'justify-start'}`}>
               <span
-                className="pointer-events-none absolute -top-[14vw] left-0 select-none text-[14vw] font-black uppercase leading-none tracking-tighter text-white/[0.04]"
+                className={`pointer-events-none absolute -top-[14vw] select-none text-[14vw] font-black uppercase leading-none tracking-tighter text-white/[0.04] ${
+                  i % 2 === 1 ? 'right-0 text-right' : 'left-0'
+                }`}
                 style={SYNE}
                 aria-hidden
               >

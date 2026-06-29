@@ -104,8 +104,15 @@ export const CircularProjects = ({ projects, autoplay = true }: CircularProjects
   const prev = useCallback(() => goTo(index - 1), [goTo, index]);
 
   const handleBack = useCallback(() => {
-    // Return to the "View More" button at the bottom of the projects section.
-    window.location.href = "/#projects-view-more";
+    // Prefer a real history back: it restores the home page (and the exact
+    // "View More" scroll position) from the back/forward cache, which is far
+    // more reliable than reloading and re-running a hash scroll. Fall back to
+    // the hash only when there's no in-app history (e.g. /projects opened directly).
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.location.href = "/#projects-view-more";
+    }
   }, []);
 
   // Autoplay (pauses permanently once the user navigates manually).

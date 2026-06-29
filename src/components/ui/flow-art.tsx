@@ -81,7 +81,13 @@ const FlowArt: React.FC<FlowArtProps> = ({
         if (!inner) return;
 
         if (i > 0) {
-          gsap.set(inner, { rotation: 30, transformOrigin: 'bottom left' });
+          // Alternate the swing side: odd panels hinge from the bottom-right
+          // (enter from the right), even panels from the bottom-left — a zigzag.
+          const fromRight = i % 2 === 1;
+          gsap.set(inner, {
+            rotation: fromRight ? -30 : 30,
+            transformOrigin: fromRight ? 'bottom right' : 'bottom left',
+          });
           const tween = gsap.to(inner, {
             rotation: 0,
             ease: 'none',
