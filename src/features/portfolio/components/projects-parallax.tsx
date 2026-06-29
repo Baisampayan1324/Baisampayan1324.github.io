@@ -3,6 +3,7 @@
 import React, { useRef } from "react";
 import { motion, useScroll, useTransform, useSpring, useReducedMotion } from "framer-motion";
 import ScrollFloat from "@/components/ui/scroll-float";
+import FloatingLines from "@/components/ui/floating-lines";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { projects, Project } from "@/features/projects/constants/projects-data";
@@ -31,7 +32,24 @@ function ExternalIcon() {
 const ProjectRow = React.memo(function ProjectRow({ project, index }: { project: Project; index: number }) {
   const reverse = index % 2 === 1;
   const ref = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const prefersReduced = useReducedMotion();
+
+  // Only play the clip while the card is on screen. Stops every project video
+  // from buffering/decoding at once (which stutters against the WebGL backdrop).
+  React.useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) v.play().catch(() => {});
+        else v.pause();
+      },
+      { threshold: 0.25 }
+    );
+    io.observe(v);
+    return () => io.disconnect();
+  }, []);
 
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -109,20 +127,25 @@ const ProjectRow = React.memo(function ProjectRow({ project, index }: { project:
         <motion.div
           style={{
             scale,
-            background: project.image
-              ? `url(${project.image}) center/cover no-repeat`
-              : `linear-gradient(135deg, ${project.accentColor}40 0%, #0b0b0b 70%)`,
+            // Video projects render the <video> on top — skip the bg image (its PNG
+            // may not exist). Only image-only projects use the bg; else a gradient.
+            background: project.video
+              ? `linear-gradient(135deg, ${project.accentColor}40 0%, #0b0b0b 70%)`
+              : project.image
+                ? `url(${project.image}) center/cover no-repeat`
+                : `linear-gradient(135deg, ${project.accentColor}40 0%, #0b0b0b 70%)`,
           }}
           className="relative flex w-full items-end overflow-hidden rounded-xl shadow-2xl group aspect-video md:w-[44rem] lg:w-[48rem] md:aspect-video"
         >
           {project.video && (
             <video
+              ref={videoRef}
               src={project.video}
               autoPlay
               loop
               muted
               playsInline
-              preload="auto"
+              preload="metadata"
               className="absolute inset-0 h-full w-full object-cover object-center scale-[1.06] origin-center"
             />
           )}
@@ -157,9 +180,28 @@ export function ProjectsParallax() {
 
   return (
     <section id="projects" className="relative w-full bg-background px-4 py-16 sm:px-6 sm:py-20 md:px-12 md:py-24 border-t border-border/50">
+      {/* WebGL floating lines backdrop */}
+      <div className="absolute inset-0 z-0 opacity-30">
+        <FloatingLines
+          linesGradient={["#9a7b3f", "#46587a"]}
+          enabledWaves={["top", "middle", "bottom"]}
+          lineCount={[6, 8, 10]}
+          lineDistance={[8, 6, 4]}
+          // Centre the wave clusters (x≈0) so the lines span the full width —
+          // left side as well as right — instead of leaning to one edge.
+          topWavePosition={{ x: 0, y: 0.5, rotate: -0.4 }}
+          middleWavePosition={{ x: 0, y: 0, rotate: 0.2 }}
+          bottomWavePosition={{ x: 0, y: -0.7, rotate: 0.4 }}
+          bendRadius={5.0}
+          bendStrength={-0.5}
+          interactive
+          parallax
+        />
+      </div>
+
       <header className="relative z-10 mx-auto mb-10 max-w-7xl md:mb-12">
         <ScrollFloat containerClassName="text-foreground" textClassName="text-foreground">
-          Projects
+          Featured Projects
         </ScrollFloat>
       </header>
 
@@ -170,7 +212,7 @@ export function ProjectsParallax() {
       </div>
 
       {/* View More */}
-      <div className="relative z-10 mx-auto mt-14 flex max-w-7xl justify-center md:mt-16">
+      <div id="projects-view-more" className="relative z-10 mx-auto mt-14 flex max-w-7xl justify-center md:mt-16 scroll-mt-24">
         <Link
           href="/projects"
           prefetch={true}

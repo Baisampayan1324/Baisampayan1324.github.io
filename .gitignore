@@ -73,3 +73,8 @@ skills-lock.json
 *AUDIT.md
 *DESIGN.md
 *PRODUCT.md
+*IMPROVISE.md
+*PRODUCTION.md
+
+# Local backup of pre-720p hero video (keep out of the repo)
+hero-video.orig.mp4

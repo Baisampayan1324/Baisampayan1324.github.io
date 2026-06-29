@@ -48,7 +48,7 @@ const AnimatedHeader = () => {
         }`}
       >
         <ScrollFloat containerClassName="text-foreground" textClassName="text-foreground">
-          Applied AI &amp; data science experience
+          Professional Experience
         </ScrollFloat>
       </div>
     </header>

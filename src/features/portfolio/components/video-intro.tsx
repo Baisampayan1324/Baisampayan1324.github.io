@@ -35,21 +35,17 @@ export default function VideoIntro() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleMuteToggle = () => {
-    const v = videoRef.current;
-    if (!v) return;
-    hasInteracted.current = true;
-    const next = !isMuted;
-    v.muted = next;
-    v.volume = next ? 0 : 1;
-    setIsMuted(next);
-    if (!next) void v.play();
-  };
-
   const handlePlayPause = () => {
     const v = videoRef.current;
     if (!v) return;
     if (v.paused) {
+      // A button press is a user gesture — safe to turn sound on here too.
+      if (!hasInteracted.current && !pastHero) {
+        hasInteracted.current = true;
+        v.muted = false;
+        v.volume = 1;
+        setIsMuted(false);
+      }
       v.play();
       setIsPlaying(true);
     } else {
@@ -130,22 +126,30 @@ export default function VideoIntro() {
   useEffect(() => {
     const unmute = () => {
       if (hasInteracted.current) return;
-      hasInteracted.current = true;
       const v = videoRef.current;
-      if (v && !pastHero) {
-        v.muted = false;
-        v.volume = 1;
-        setIsMuted(false);
+      if (!v || pastHero) return;
+      hasInteracted.current = true;
+      v.muted = false;
+      v.volume = 1;
+      setIsMuted(false);
+      // If the browser still rejects sound-on playback (e.g. wheel isn't treated
+      // as activation), fall back to muted so the video never freezes silent.
+      v.play().catch(() => {
+        hasInteracted.current = false;
+        v.muted = true;
+        setIsMuted(true);
         void v.play().catch(() => {});
-      }
+      });
     };
     window.addEventListener('pointerdown', unmute);
     window.addEventListener('keydown', unmute);
     window.addEventListener('touchend', unmute);
+    window.addEventListener('wheel', unmute, { passive: true });
     return () => {
       window.removeEventListener('pointerdown', unmute);
       window.removeEventListener('keydown', unmute);
       window.removeEventListener('touchend', unmute);
+      window.removeEventListener('wheel', unmute);
     };
   }, [pastHero]);
 
@@ -214,28 +218,6 @@ export default function VideoIntro() {
           )}
           <span>{isPlaying ? 'Pause' : 'Play'}</span>
         </button>
-
-        <button
-          className={`${styles.glassBtn} lm-btn`}
-          onClick={handleMuteToggle}
-          aria-label={isMuted ? 'Unmute video' : 'Mute video'}
-          title={isMuted ? 'Unmute' : 'Mute'}
-        >
-          {isMuted ? (
-            <svg width="16" height="14" viewBox="0 0 16 14" fill="none">
-              <path d="M1 4.5H4L8 1v12L4 9.5H1V4.5Z" fill="currentColor"/>
-              <line x1="11" y1="4" x2="15" y2="10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              <line x1="15" y1="4" x2="11" y2="10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-          ) : (
-            <svg width="16" height="14" viewBox="0 0 16 14" fill="none">
-              <path d="M1 4.5H4L8 1v12L4 9.5H1V4.5Z" fill="currentColor"/>
-              <path d="M11 3.5C12.7 4.8 13.7 6.3 13.7 7S12.7 9.2 11 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-              <path d="M12.5 1.5C14.8 3.2 16 5 16 7s-1.2 3.8-3.5 5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.55"/>
-            </svg>
-          )}
-          <span>{isMuted ? 'Unmute' : 'Mute'}</span>
-        </button>
       </div>
 
       {/* ── Main content overlay ── */}
@@ -267,7 +249,7 @@ export default function VideoIntro() {
                </FlipText>
             </div>
             <div className={styles.ctaRow}>
-              <a className={`${styles.ctaPrimary} lm-btn`} href="https://drive.google.com/file/d/1upS_7CnuZPbpX3arNF8uatoy7WE7oGWq/view?usp=sharing" target="_blank" rel="noopener noreferrer">
+              <a className={`${styles.ctaPrimary} lm-btn`} href="https://drive.google.com/file/d/1EuypLMFigJg8yYvp9s5Fo18BxTv2LCvF/view?usp=sharing" target="_blank" rel="noopener noreferrer">
                 Curriculum Vitae
               </a>
             </div>

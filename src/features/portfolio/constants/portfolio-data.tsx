@@ -37,7 +37,7 @@ export const jobTitles = [
 export const education: EducationEntry[] = [
   {
     badge: 'PU',
-    badgeImg: 'Parul.png',
+    badgeImg: 'Parul.webp',
     degree: 'Bachelor of Technology in Computer Science & Engineering (Artificial Intelligence)',
     school: 'Parul University',
     period: '2023 — 2026',
@@ -50,7 +50,7 @@ export const education: EducationEntry[] = [
   },
   {
     badge: 'IMPS',
-    badgeImg: 'IMPS.png',
+    badgeImg: 'IMPS.webp',
     degree: 'Diploma in Computer Science',
     school: 'IMPS Polytechnic College',
     period: '2020 — 2023',
@@ -69,7 +69,7 @@ export const experiences: Experience[] = [
     company: "iWebWala",
     location: "Vadodara",
     period: "Jan 2026 — Apr 2026",
-    logo: "iwebwala.png",
+    logo: "iwebwala.webp",
     accent: "#4A90D9",
     points: [
       "Built MailBuddy — an AI-powered email triage platform with multi-category LLM classification and confidence scoring for fully automated inbox management.",
@@ -81,7 +81,7 @@ export const experiences: Experience[] = [
     company: "Chegg Inc.",
     location: "Remote",
     period: "Apr 2024 — Apr 2026",
-    logo: "Chegg.png",
+    logo: "Chegg.webp",
     accent: "#F59E0B",
     points: [
       "Solved 100+ problems across ML, Python, and DSA — debugged ML pipelines and explained complex concepts with precision and clarity for students worldwide.",
@@ -93,7 +93,7 @@ export const experiences: Experience[] = [
     company: "Cognifyz Technologies",
     location: "Remote",
     period: "Feb 2025 — Apr 2025",
-    logo: "Cognifyz.png",
+    logo: "Cognifyz.webp",
     accent: "#10B981",
     points: [
       "Built and evaluated ML models on 20K+ row datasets, improving F1-score by 10% through systematic feature engineering and hyperparameter tuning.",

@@ -9,7 +9,7 @@ export interface Project {
   showGithub: boolean;
   showLive: boolean;
   accentColor: string;
-  image: string;
+  image?: string;
   video?: string;
   featured: boolean;
 }
@@ -30,7 +30,6 @@ export const projects: Project[] = [
     showGithub: true,
     showLive: true,
     accentColor: "#4A90D9",
-    image: "/companies/aimom.png",
     video: "/companies/ai-mom.mp4",
     featured: true,
   },
@@ -49,7 +48,7 @@ export const projects: Project[] = [
     showGithub: true,
     showLive: true,
     accentColor: "#7C3AED",
-    image: "/companies/stress.png",
+    image: "/companies/stress.webp",
     featured: true,
   },
   {
@@ -67,7 +66,7 @@ export const projects: Project[] = [
     showGithub: true,
     showLive: true,
     accentColor: "#10B981",
-    image: "/companies/documind.png",
+    video: "/companies/documind.mp4",
     featured: true,
   },
   {
@@ -85,7 +84,7 @@ export const projects: Project[] = [
     showGithub: false,
     showLive: true,
     accentColor: "#F59E0B",
-    image: "/companies/mailbuddy.png",
+    image: "/companies/mailbuddy.webp",
     featured: true,
   },
   {
@@ -103,7 +102,7 @@ export const projects: Project[] = [
     showGithub: true,
     showLive: true,
     accentColor: "#EC4899",
-    image: "/companies/twinmind.png",
+    image: "/companies/twinmind.webp",
     featured: false,
   },
   {
@@ -121,7 +120,7 @@ export const projects: Project[] = [
     showGithub: true,
     showLive: false,
     accentColor: "#06B6D4",
-    image: "/companies/ethara.png",
+    image: "/companies/ethara.webp",
     featured: false,
   },
   {
@@ -139,7 +138,7 @@ export const projects: Project[] = [
     showGithub: true,
     showLive: false,
     accentColor: "#E11D48",
-    image: "/companies/clinic.png",
+    image: "/companies/clinic.webp",
     featured: false,
   },
 ];

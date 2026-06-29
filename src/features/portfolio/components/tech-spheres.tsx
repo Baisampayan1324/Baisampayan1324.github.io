@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useTransform, useSpring, useScroll, MotionValue } from "framer-motion";
 
 // --- Types ---
@@ -20,7 +21,10 @@ interface BallProps {
 const CARD_W = 78; // px
 const CARD_H = 94; // px
 
-const ico = (path: string) => `https://api.iconify.design/${path}.svg?height=512`;
+// Force a uniform black-and-white look: all icons come from monochrome Iconify
+// sets (simple-icons / tabler) and are recolored to near-black so every logo
+// stays visible on the white cards (colored `logos/*` icons washed out before).
+const ico = (path: string) => `https://api.iconify.design/${path}.svg?height=512&color=%23141414`;
 
 const Ball = React.memo(function Ball({
   tech,
@@ -139,7 +143,7 @@ function DetailCard({ tech, onClose }: { tech: Tech; onClose: () => void }) {
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-[100] grid place-items-center p-5">
+    <div className="fixed inset-0 z-[300] grid place-items-center p-5">
       {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -193,38 +197,38 @@ function DetailCard({ tech, onClose }: { tech: Tech; onClose: () => void }) {
   );
 }
 
-// --- Tech list (Iconify colored logos) ---
+// --- Tech list (monochrome Iconify logos, recolored black by `ico`) ---
 const TECH: Tech[] = [
-  { name: "Python", icon: "logos/python", desc: "Language", usage: "Primary language for everything — ML pipelines, data prep, backends, and automation scripts." },
-  { name: "Java", icon: "logos/java", desc: "Language", usage: "OOP fundamentals and DSA practice; used across academic projects and 300+ LeetCode solutions." },
-  { name: "SQL", icon: "logos/mysql", desc: "Databases", usage: "Querying and modelling relational data behind my apps and analytics work." },
-  { name: "HTML", icon: "logos/html-5", desc: "Markup", usage: "Structural backbone for the web UIs and dashboards I build." },
-  { name: "CSS", icon: "logos/css-3", desc: "Styling", usage: "Responsive layouts, animations, and visual polish on front-ends." },
-  { name: "TensorFlow", icon: "logos/tensorflow", desc: "ML Framework", usage: "Building and training deep-learning models for vision and NLP experiments." },
-  { name: "PyTorch", icon: "logos/pytorch-icon", desc: "ML Framework", usage: "My go-to for research-style model building, fine-tuning, and custom training loops." },
-  { name: "Keras", icon: "simple-icons/keras?color=%23D00000", desc: "Deep Learning", usage: "Fast prototyping of neural networks on top of TensorFlow." },
-  { name: "SciPy", icon: "simple-icons/scipy?color=%238CAAE6", desc: "Scientific", usage: "Scientific computing and optimization inside data pipelines." },
-  { name: "NumPy", icon: "logos/numpy", desc: "Arrays", usage: "Vectorized array math at the core of every preprocessing step." },
-  { name: "Pandas", icon: "logos/pandas-icon", desc: "Data", usage: "Data wrangling, cleaning, and feature engineering on tabular datasets." },
-  { name: "Matplotlib", icon: "logos/matplotlib-icon", desc: "Plotting", usage: "Visualizing metrics, distributions, and model results." },
-  { name: "Hugging Face", icon: "logos/hugging-face-icon", desc: "Models", usage: "Pretrained transformers and datasets for LLM and NLP applications." },
-  { name: "LangChain", icon: "simple-icons/langchain?color=%231C3C3C", desc: "LLM Apps", usage: "Orchestrating RAG pipelines, agents, and multi-LLM workflows." },
-  { name: "Scikit-Learn", icon: "simple-icons/scikitlearn?color=%23F7931E", desc: "ML", usage: "Classic ML — regression, classification, clustering, and evaluation." },
-  { name: "FastAPI", icon: "logos/fastapi-icon", desc: "API", usage: "Serving ML models and building production REST APIs with real-time inference." },
-  { name: "Streamlit", icon: "logos/streamlit", desc: "Apps", usage: "Shipping quick interactive demos and data apps." },
-  { name: "Node.js", icon: "logos/nodejs-icon", desc: "Runtime", usage: "JavaScript runtime for tooling and full-stack glue." },
-  { name: "React", icon: "logos/react", desc: "UI", usage: "Building interactive front-ends — including this portfolio." },
-  { name: "Flask", icon: "simple-icons/flask?color=%23000000", desc: "Web", usage: "Lightweight Python APIs and microservices." },
-  { name: "Django", icon: "logos/django-icon", desc: "Web", usage: "Full-featured web backends with ORM and auth." },
-  { name: "Docker", icon: "logos/docker-icon", desc: "Containers", usage: "Containerizing apps and models for reproducible deploys." },
-  { name: "MySQL", icon: "logos/mysql", desc: "Database", usage: "Relational storage for application data." },
-  { name: "MongoDB", icon: "logos/mongodb-icon", desc: "Database", usage: "Document store for flexible, unstructured app data." },
-  { name: "Firebase", icon: "logos/firebase", desc: "Backend", usage: "Auth, realtime DB, and hosting for quick product builds." },
-  { name: "Google Cloud", icon: "logos/google-cloud", desc: "Cloud", usage: "Deploying and scaling ML services in the cloud." },
-  { name: "Git", icon: "logos/git-icon", desc: "VCS", usage: "Version control on every project." },
-  { name: "GitHub", icon: "simple-icons/github?color=%23000000", desc: "Code Host", usage: "Hosting code, CI, and collaboration." },
-  { name: "VS Code", icon: "logos/visual-studio-code", desc: "Editor", usage: "Daily-driver editor for all development." },
-  { name: "Anaconda", icon: "simple-icons/anaconda?color=%2344A833", desc: "Env", usage: "Managing Python environments and ML dependencies." },
+  { name: "Python", icon: "simple-icons/python", desc: "Language", usage: "Primary language for everything — ML pipelines, data prep, backends, and automation scripts." },
+  { name: "Java", icon: "simple-icons/openjdk", desc: "Language", usage: "OOP fundamentals and DSA practice; used across academic projects and 300+ LeetCode solutions." },
+  { name: "SQL", icon: "simple-icons/mysql", desc: "Databases", usage: "Querying and modelling relational data behind my apps and analytics work." },
+  { name: "HTML", icon: "simple-icons/html5", desc: "Markup", usage: "Structural backbone for the web UIs and dashboards I build." },
+  { name: "CSS", icon: "simple-icons/css", desc: "Styling", usage: "Responsive layouts, animations, and visual polish on front-ends." },
+  { name: "TensorFlow", icon: "simple-icons/tensorflow", desc: "ML Framework", usage: "Building and training deep-learning models for vision and NLP experiments." },
+  { name: "PyTorch", icon: "simple-icons/pytorch", desc: "ML Framework", usage: "My go-to for research-style model building, fine-tuning, and custom training loops." },
+  { name: "Keras", icon: "simple-icons/keras", desc: "Deep Learning", usage: "Fast prototyping of neural networks on top of TensorFlow." },
+  { name: "SciPy", icon: "simple-icons/scipy", desc: "Scientific", usage: "Scientific computing and optimization inside data pipelines." },
+  { name: "NumPy", icon: "simple-icons/numpy", desc: "Arrays", usage: "Vectorized array math at the core of every preprocessing step." },
+  { name: "Pandas", icon: "simple-icons/pandas", desc: "Data", usage: "Data wrangling, cleaning, and feature engineering on tabular datasets." },
+  { name: "Matplotlib", icon: "tabler/chart-histogram", desc: "Plotting", usage: "Visualizing metrics, distributions, and model results." },
+  { name: "Hugging Face", icon: "simple-icons/huggingface", desc: "Models", usage: "Pretrained transformers and datasets for LLM and NLP applications." },
+  { name: "LangChain", icon: "simple-icons/langchain", desc: "LLM Apps", usage: "Orchestrating RAG pipelines, agents, and multi-LLM workflows." },
+  { name: "Scikit-Learn", icon: "simple-icons/scikitlearn", desc: "ML", usage: "Classic ML — regression, classification, clustering, and evaluation." },
+  { name: "FastAPI", icon: "simple-icons/fastapi", desc: "API", usage: "Serving ML models and building production REST APIs with real-time inference." },
+  { name: "Streamlit", icon: "simple-icons/streamlit", desc: "Apps", usage: "Shipping quick interactive demos and data apps." },
+  { name: "Node.js", icon: "simple-icons/nodedotjs", desc: "Runtime", usage: "JavaScript runtime for tooling and full-stack glue." },
+  { name: "React", icon: "simple-icons/react", desc: "UI", usage: "Building interactive front-ends — including this portfolio." },
+  { name: "Flask", icon: "simple-icons/flask", desc: "Web", usage: "Lightweight Python APIs and microservices." },
+  { name: "Django", icon: "simple-icons/django", desc: "Web", usage: "Full-featured web backends with ORM and auth." },
+  { name: "Docker", icon: "simple-icons/docker", desc: "Containers", usage: "Containerizing apps and models for reproducible deploys." },
+  { name: "MySQL", icon: "simple-icons/mysql", desc: "Database", usage: "Relational storage for application data." },
+  { name: "MongoDB", icon: "simple-icons/mongodb", desc: "Database", usage: "Document store for flexible, unstructured app data." },
+  { name: "Firebase", icon: "simple-icons/firebase", desc: "Backend", usage: "Auth, realtime DB, and hosting for quick product builds." },
+  { name: "Google Cloud", icon: "simple-icons/googlecloud", desc: "Cloud", usage: "Deploying and scaling ML services in the cloud." },
+  { name: "Git", icon: "simple-icons/git", desc: "VCS", usage: "Version control on every project." },
+  { name: "GitHub", icon: "simple-icons/github", desc: "Code Host", usage: "Hosting code, CI, and collaboration." },
+  { name: "VS Code", icon: "simple-icons/visualstudiocode", desc: "Editor", usage: "Daily-driver editor for all development." },
+  { name: "Anaconda", icon: "simple-icons/anaconda", desc: "Env", usage: "Managing Python environments and ML dependencies." },
 ];
 
 const TOTAL = TECH.length;
@@ -235,6 +239,8 @@ export default function TechSpheres() {
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [entered, setEntered] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const wrapRef = useRef<HTMLDivElement>(null); // tall scroll track
   const pinRef = useRef<HTMLDivElement>(null); // sticky stage
@@ -294,7 +300,7 @@ export default function TechSpheres() {
           className="pointer-events-none absolute top-4 z-0 flex flex-col items-center text-center"
         >
           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
-            Scroll to explore the stack · tap a card for details
+            Click any logo to see where I use it · scroll to explore
           </p>
         </motion.div>
 
@@ -313,12 +319,18 @@ export default function TechSpheres() {
         ))}
       </div>
 
-      {/* Expanded detail card */}
-      <AnimatePresence>
-        {activeIndex !== null && (
-          <DetailCard tech={TECH[activeIndex]} onClose={() => setActiveIndex(null)} />
+      {/* Expanded detail card — portaled to <body> so the section's CSS
+          containment (`contain: layout`) can't trap this fixed overlay inside
+          the tall scroll track (which hid it off-screen on click). */}
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {activeIndex !== null && (
+              <DetailCard tech={TECH[activeIndex]} onClose={() => setActiveIndex(null)} />
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
     </div>
   );
 }

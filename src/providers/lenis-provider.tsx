@@ -21,8 +21,9 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
     const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const lenis = new Lenis({
-      lerp: prefersReduced ? 1 : 0.11,
+      lerp: prefersReduced ? 1 : 0.085, // lower = smoother glide
       smoothWheel: !prefersReduced,
+      wheelMultiplier: 0.9,
       // syncTouch removed: causes iOS momentum scroll to fight Lenis, producing stutter on touch
     });
 

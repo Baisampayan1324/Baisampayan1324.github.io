@@ -1,133 +1,140 @@
 "use client";
-import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
-import { ArrowLeft, ArrowRight, ExternalLink } from "lucide-react";
+
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { ArrowLeft, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import DotField from '@/components/ui/dot-field';
+import DotField from "@/components/ui/dot-field";
+import { cn } from "@/utils/cn";
 import { Project } from "../constants/projects-data";
 
 const SYNE: React.CSSProperties = { fontFamily: "'Syne', sans-serif" };
 const DM: React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" };
+
+function GithubIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+    </svg>
+  );
+}
 
 interface CircularProjectsProps {
   projects: Project[];
   autoplay?: boolean;
 }
 
-export const CircularProjects = ({
-  projects,
-  autoplay = true,
-}: CircularProjectsProps) => {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [containerWidth, setContainerWidth] = useState(1200);
+function ProjectMedia({ project }: { project: Project }) {
+  if (project.video) {
+    return (
+      <video
+        src={project.video}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        className="h-full w-full object-cover object-center scale-[1.06] origin-center"
+      />
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={project.image}
+      alt={project.title}
+      draggable={false}
+      className="h-full w-full object-cover object-center scale-[1.06] origin-center"
+    />
+  );
+}
 
-  const imageContainerRef = useRef<HTMLDivElement>(null);
-  const autoplayIntervalRef = useRef<NodeJS.Timeout | null>(null);
+function ProjectButtons({ project, center = false }: { project: Project; center?: boolean }) {
+  const hasGithub = project.showGithub && project.github && project.github !== "#";
+  const hasLive = project.showLive && project.live && project.live !== "#";
+  if (!hasGithub && !hasLive) return null;
+  return (
+    <div className={cn("flex flex-wrap gap-3", center && "justify-center")}>
+      {hasGithub && (
+        <a
+          href={project.github}
+          target="_blank"
+          rel="noreferrer"
+          aria-label="View source on GitHub"
+          title="GitHub"
+          className="lm-btn inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-black text-white transition-colors hover:border-white/40 hover:bg-[#1a1a1a] cursor-pointer no-underline"
+        >
+          <GithubIcon />
+        </a>
+      )}
+      {hasLive && (
+        <a
+          href={project.live}
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Open live site"
+          title="Live"
+          className="lm-btn inline-flex h-11 w-11 items-center justify-center rounded-full text-black transition-opacity hover:opacity-90 cursor-pointer no-underline"
+          style={{ background: project.accentColor }}
+        >
+          <ExternalLink className="h-4 w-4" />
+        </a>
+      )}
+    </div>
+  );
+}
 
-  const projectsLength = useMemo(() => projects.length, [projects]);
-  const activeProject = useMemo(() => projects[activeIndex], [activeIndex, projects]);
+export const CircularProjects = ({ projects, autoplay = true }: CircularProjectsProps) => {
+  const [index, setIndex] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
-    function handleResize() {
-      if (imageContainerRef.current) {
-        setContainerWidth(imageContainerRef.current.offsetWidth);
-      }
-    }
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+  const len = projects.length;
+  const project = projects[index];
+
+  const stopAutoplay = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = null;
   }, []);
 
-  useEffect(() => {
-    if (autoplay) {
-      autoplayIntervalRef.current = setInterval(() => {
-        setActiveIndex((prev) => (prev + 1) % projectsLength);
-      }, 5000);
-    }
-    return () => {
-      if (autoplayIntervalRef.current) clearInterval(autoplayIntervalRef.current);
-    };
-  }, [autoplay, projectsLength]);
+  const goTo = useCallback((i: number) => {
+    stopAutoplay();
+    setIndex(((i % len) + len) % len);
+  }, [len, stopAutoplay]);
 
-  const handleNext = useCallback(() => {
-    setActiveIndex((prev) => (prev + 1) % projectsLength);
-    if (autoplayIntervalRef.current) clearInterval(autoplayIntervalRef.current);
-  }, [projectsLength]);
-
-  const handlePrev = useCallback(() => {
-    setActiveIndex((prev) => (prev - 1 + projectsLength) % projectsLength);
-    if (autoplayIntervalRef.current) clearInterval(autoplayIntervalRef.current);
-  }, [projectsLength]);
+  const next = useCallback(() => goTo(index + 1), [goTo, index]);
+  const prev = useCallback(() => goTo(index - 1), [goTo, index]);
 
   const handleBack = useCallback(() => {
-    // Always return to the projects section on the home page. We navigate
-    // explicitly (rather than router.back(), which can land on whatever page —
-    // e.g. Google — the user visited before this one). A full navigation lets
-    // the home page's Lenis hash-scroll restore the #projects section.
-    window.location.href = '/#projects';
+    // Return to the "View More" button at the bottom of the projects section.
+    window.location.href = "/#projects-view-more";
   }, []);
 
+  // Autoplay (pauses permanently once the user navigates manually).
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") handlePrev();
-      if (e.key === "ArrowRight") handleNext();
+    if (!autoplay) return;
+    timerRef.current = setInterval(() => setIndex((i) => (i + 1) % len), 6000);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
     };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [handlePrev, handleNext]);
+  }, [autoplay, len]);
 
-  function getImageStyle(index: number): React.CSSProperties {
-    const isActive = index === activeIndex;
-    
-    // Calculate distance from active index
-    let offset = index - activeIndex;
-    if (offset < -projectsLength / 2) offset += projectsLength;
-    if (offset > projectsLength / 2) offset -= projectsLength;
-    
-    const absOffset = Math.abs(offset);
-
-    if (isActive) {
-      return {
-        zIndex: 50,
-        opacity: 1,
-        pointerEvents: "auto",
-        transform: `translate(0px, 0px) scale(1) rotateZ(0deg)`,
-        transition: "all 0.8s cubic-bezier(.4,2,.3,1)",
-      };
-    }
-    
-    // Pseudo-random but consistent values based on index
-    const rotate = ((index * 13) % 20) - 10; // -10 to 10 deg
-    const tx = ((index * 29) % 60) - 30; // -30 to 30 px
-    const ty = ((index * 17) % 60) - 30; // -30 to 30 px
-    
-    return {
-      zIndex: 50 - absOffset,
-      opacity: Math.max(0, 1 - absOffset * 0.15),
-      pointerEvents: "none",
-      transform: `translate(${tx}px, ${ty}px) scale(${1 - absOffset * 0.05}) rotateZ(${rotate}deg)`,
-      transition: "all 0.8s cubic-bezier(.4,2,.3,1)",
+  // Keyboard arrows
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") prev();
+      if (e.key === "ArrowRight") next();
     };
-  }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [prev, next]);
 
-  const contentVariants = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -20 },
-  };
-
-  // Create semi-transparent versions of the accent color for the dots
-  const getGradientColors = () => {
-    const color = activeProject.accentColor;
-    return {
-      from: color + '66', // ~40% opacity
-      to: color + '1A'    // ~10% opacity
-    };
-  };
-  const dotColors = getGradientColors();
+  const dotColors = useMemo(
+    () => ({ from: project.accentColor + "66", to: project.accentColor + "1A" }),
+    [project.accentColor]
+  );
 
   return (
-    <div className="relative min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6 lg:p-12 overflow-hidden">
-      {/* Background DotField */}
+    <div className="relative min-h-screen overflow-hidden bg-[#0a0a0a] flex items-center justify-center p-6 lg:p-12">
+      {/* Background DotField — tinted by the active project */}
       <div className="absolute inset-0 z-0">
         <DotField
           dotRadius={4}
@@ -144,7 +151,7 @@ export const CircularProjects = ({
         />
       </div>
 
-      {/* Back button — top-left corner */}
+      {/* Back button */}
       <button
         onClick={handleBack}
         aria-label="Go back to projects"
@@ -154,151 +161,109 @@ export const CircularProjects = ({
         <span className="font-medium text-sm">Back</span>
       </button>
 
-      {/* Main grid */}
-      <div className="w-full max-w-screen-2xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-10 lg:gap-16 items-center">
-        
-        {/* Image Stack */}
-        <div
-          ref={imageContainerRef}
-          className="relative w-full max-w-[640px] aspect-video mx-auto overflow-hidden rounded-2xl"
-          style={{ perspective: "1200px" }}
-        >
-          {projects.map((project, index) => (
-            <div
-              key={project.title}
-              className="absolute inset-0 overflow-hidden shadow-2xl bg-[#0a0a0a]"
-              style={{ ...getImageStyle(index), borderRadius: 'inherit' }}
-            >
-              {project.video ? (
-                <video
-                  src={project.video}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="auto"
-                  className="w-full h-full object-cover origin-center scale-[1.06]"
-                />
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={project.image}
-                  alt={project.title}
-                  className="w-full h-full object-cover origin-center scale-[1.06]"
-                />
-              )}
-              {/* Gradient overlay for readability */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
-            </div>
-          ))}
-        </div>
-
-        {/* Text Content */}
-        <div className="flex flex-col justify-center">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeIndex}
-              variants={contentVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ duration: 0.35, ease: "easeInOut" }}
-              className="flex flex-col"
-            >
-              {/* Accent bar */}
-              <div
-                className="w-10 h-[3px] mb-5 rounded-full"
-                style={{ background: activeProject.accentColor }}
-              />
-
-              {/* Title */}
-              <h2
-                className="text-3xl sm:text-4xl lg:text-5xl font-extrabold uppercase leading-[1.05] text-white mb-3"
-                style={SYNE}
-              >
-                {activeProject.title}
-              </h2>
-
-              {/* Tech stack */}
-              <p
-                className="text-[11px] uppercase tracking-[0.22em] mb-6"
-                style={{ color: activeProject.accentColor, ...DM }}
-              >
-                {activeProject.techStack}
-              </p>
-
-              {/* Description — word-by-word blur animation */}
-              <motion.p
-                className="text-white/75 text-sm lg:text-base leading-relaxed mb-8 max-w-md"
-                style={DM}
-              >
-                {activeProject.description.split(" ").map((word, i) => (
-                  <motion.span
-                    key={i}
-                    initial={{ filter: "blur(8px)", opacity: 0, y: 4 }}
-                    animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2, ease: "easeOut", delay: 0.012 * i }}
-                    style={{ display: "inline-block" }}
-                  >
-                    {word}&nbsp;
-                  </motion.span>
-                ))}
-              </motion.p>
-
-              {/* Buttons — GitHub + Live */}
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-4">
+        {/* ── Desktop layout ── */}
+        <div className="hidden md:flex relative items-center justify-center">
+          {/* Media (enlarged) */}
+          <div className="w-[640px] aspect-video rounded-3xl overflow-hidden bg-[#111] flex-shrink-0 shadow-2xl ring-1 ring-white/10">
+            <AnimatePresence mode="wait">
               <motion.div
-                className="flex flex-wrap gap-4 mb-4"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.28, duration: 0.4 }}
+                key={`${project.title}-media`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
+                className="h-full w-full"
               >
-                {activeProject.showGithub && activeProject.github && (
-                  <a
-                    href={activeProject.github}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 border border-white/20 bg-white/5 hover:bg-white/10 px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-white transition-colors rounded-sm no-underline"
-                    style={SYNE}
-                  >
-                    <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577v-2.165c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.09-.745.083-.729.083-.729 1.205.084 1.84 1.237 1.84 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.29-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.63-5.37-12-12-12z" />
-                    </svg>
-                    GITHUB
-                  </a>
-                )}
-                {activeProject.showLive && activeProject.live && activeProject.live !== "#" && (
-                  <a
-                    href={activeProject.live}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-black transition-opacity hover:opacity-85 rounded-sm no-underline"
-                    style={{ ...SYNE, background: activeProject.accentColor }}
-                  >
-                    <ExternalLink size={14} /> LIVE
-                  </a>
-                )}
+                <ProjectMedia project={project} />
               </motion.div>
-            </motion.div>
-          </AnimatePresence>
+            </AnimatePresence>
+          </div>
 
-          {/* Navigation Arrows */}
-          <div className="flex gap-4 mt-6">
-            <button
-              onClick={handlePrev}
-              aria-label="Previous project"
-              className="w-[50px] h-[50px] rounded-full border border-white/40 hover:border-white text-white backdrop-blur-md transition-all flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 duration-200 bg-transparent"
-            >
-              <ArrowLeft size={22} strokeWidth={1} />
-            </button>
-            <button
-              onClick={handleNext}
-              aria-label="Next project"
-              className="w-[50px] h-[50px] rounded-full border border-white/40 hover:border-white text-white backdrop-blur-md transition-all flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 duration-200 bg-transparent"
-            >
-              <ArrowRight size={22} strokeWidth={1} />
-            </button>
+          {/* Card (overlaps the media) — reduced width */}
+          <div className="ml-[-90px] z-10 w-[360px] flex-shrink-0 rounded-3xl border border-white/10 bg-[#101010]/95 p-6 shadow-2xl backdrop-blur-md">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={project.title}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
+              >
+                <div className="mb-5 h-1 w-10 rounded-full" style={{ background: project.accentColor }} />
+                <h2 className="mb-2 text-2xl lg:text-3xl font-extrabold uppercase leading-tight text-white" style={SYNE}>
+                  {project.title}
+                </h2>
+                <p className="mb-6 text-[11px] uppercase tracking-[0.22em]" style={{ ...DM, color: project.accentColor }}>
+                  {project.techStack}
+                </p>
+                <p className="mb-8 text-sm lg:text-base leading-relaxed text-white/75" style={DM}>
+                  {project.description}
+                </p>
+                <ProjectButtons project={project} />
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
+
+        {/* ── Mobile layout ── */}
+        <div className="md:hidden mx-auto max-w-sm text-center">
+          <div className="mb-6 w-full aspect-video overflow-hidden rounded-3xl bg-[#111] ring-1 ring-white/10 shadow-2xl">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`${project.title}-media-m`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
+                className="h-full w-full"
+              >
+                <ProjectMedia project={project} />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`${project.title}-m`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+            >
+              <div className="mx-auto mb-4 h-1 w-10 rounded-full" style={{ background: project.accentColor }} />
+              <h2 className="mb-2 text-xl font-extrabold uppercase text-white" style={SYNE}>
+                {project.title}
+              </h2>
+              <p className="mb-4 text-[10px] uppercase tracking-[0.2em]" style={{ ...DM, color: project.accentColor }}>
+                {project.techStack}
+              </p>
+              <p className="mb-6 text-sm leading-relaxed text-white/75" style={DM}>
+                {project.description}
+              </p>
+              <ProjectButtons project={project} center />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+      </div>
+
+      {/* ── Navigation: fixed arrow pair, centered below the card (dots removed) ── */}
+      <div className="fixed bottom-[18%] left-1/2 z-50 flex -translate-x-1/2 items-center gap-5">
+        <button
+          onClick={prev}
+          aria-label="Previous project"
+          className="flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-md transition-all hover:border-white/50 hover:scale-105 active:scale-95 cursor-pointer"
+        >
+          <ChevronLeft className="h-6 w-6" strokeWidth={1.5} />
+        </button>
+        <button
+          onClick={next}
+          aria-label="Next project"
+          className="flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-black/50 text-white backdrop-blur-md transition-all hover:border-white/50 hover:scale-105 active:scale-95 cursor-pointer"
+        >
+          <ChevronRight className="h-6 w-6" strokeWidth={1.5} />
+        </button>
       </div>
     </div>
   );

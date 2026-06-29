@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import FlowArt, { FlowSection } from '@/components/ui/flow-art';
+import ScrollFloat from '@/components/ui/scroll-float';
 import { education } from '../constants/portfolio-data';
 
 const SYNE: React.CSSProperties = { fontFamily: "'Syne', sans-serif" };
@@ -12,6 +13,11 @@ export default function Education() {
     <div id="education" className="relative w-full">
       <div className="absolute top-0 right-0 w-full md:w-1/2 h-full pointer-events-none mix-blend-screen opacity-70 z-10">
       </div>
+      <header className="relative z-20 mx-auto max-w-4xl px-4 sm:px-6 md:px-12 pt-16 sm:pt-20 md:pt-24 pb-4 text-center">
+        <ScrollFloat containerClassName="text-foreground" textClassName="text-foreground">
+          Academic Journey
+        </ScrollFloat>
+      </header>
       <FlowArt aria-label="Education timeline">
         {education.map((entry, i) => (
           <FlowSection
