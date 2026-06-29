@@ -14,7 +14,9 @@ export default function VideoIntro() {
 
   // Must start muted: browsers block autoplay of videos that have sound, which
   // freezes the video on its first frame. We unmute on the first user gesture.
-  const [isMuted, setIsMuted] = useState(true);
+  // Mute is driven via the video ref (DOM property); we only keep the setter to
+  // record state for the control logic — the value itself isn't rendered.
+  const [, setIsMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
   const hasInteracted = useRef(false);
   const didInit = useRef(false);
@@ -83,10 +85,26 @@ export default function VideoIntro() {
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
+    // Set the muted DOM *property* (not just the attribute) before playing —
+    // this is what actually allows autoplay.
     v.muted = true;
+    v.defaultMuted = true;
     setIsMuted(true);
     setIsPlaying(true);
-    v.play().catch(() => {});
+
+    const tryPlay = () => {
+      v.muted = !hasInteracted.current;
+      v.play().then(() => setIsPlaying(true)).catch(() => {});
+    };
+    tryPlay();
+    // Retry once data is available — on a cold first load `play()` can be called
+    // before the video has enough buffered to start.
+    v.addEventListener('loadeddata', tryPlay);
+    v.addEventListener('canplay', tryPlay);
+    return () => {
+      v.removeEventListener('loadeddata', tryPlay);
+      v.removeEventListener('canplay', tryPlay);
+    };
   }, []);
 
   // Pause/mute when scrolled past the hero, resume when back. Skips the very
@@ -194,12 +212,14 @@ export default function VideoIntro() {
       <div className={styles.bgBlur} aria-hidden="true" />
 
       {/* ── Main foreground video ── */}
+      {/* No `autoPlay` / `muted={...}` props here on purpose: React sets `muted`
+          as an attribute, not the DOM property, so on first SSR load the browser
+          treats this as a sound-on autoplay and blocks it (video freezes on
+          frame 1). Muting + playing is driven entirely from the ref below. */}
       <video
         ref={videoRef}
         className={styles.mainVideo}
         src="/hero-video.mp4"
-        autoPlay
-        muted={isMuted}
         loop
         playsInline
         preload="auto"

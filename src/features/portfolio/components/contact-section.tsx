@@ -4,7 +4,7 @@ import * as React from "react";
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import ScrollFloat from "@/components/ui/scroll-float";
-import { socials, EMAIL_TO } from "../constants/portfolio-data";
+import { socials } from "../constants/portfolio-data";
 import styles from "./contact-section.module.css";
 
 const MAX = 500;
@@ -99,10 +99,6 @@ export function ContactSection() {
   // Spam honeypot — bots fill this hidden field; humans never see it.
   const [botcheck, setBotcheck] = useState("");
 
-  // Public access key from Web3Forms (safe to expose). Set in .env.local:
-  //   NEXT_PUBLIC_WEB3FORMS_KEY=your-access-key
-  const WEB3FORMS_KEY = process.env.NEXT_PUBLIC_WEB3FORMS_KEY;
-
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -125,33 +121,27 @@ export function ContactSection() {
     }
     if (botcheck) return; // honeypot tripped — silently drop
 
-    // No key configured → fall back to opening the visitor's mail app.
-    if (!WEB3FORMS_KEY) {
-      const subject = encodeURIComponent(`Portfolio contact from ${name}`);
-      const body = encodeURIComponent(`${message}\n\n— ${name}\n${email}`);
-      window.location.href = `mailto:${EMAIL_TO}?subject=${subject}&body=${body}`;
-      setStatus("Opening your mail app…");
-      return;
-    }
-
     setSubmitting(true);
     setStatus("Sending…");
     try {
-      const res = await fetch("https://api.web3forms.com/submit", {
+      // FormSubmit.co (activated, masked alias — keeps the email out of the
+      // client). AJAX form of the alias is /ajax/<token> (no "el/" prefix).
+      const res = await fetch("https://formsubmit.co/ajax/mobago", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
-          access_key: WEB3FORMS_KEY,
-          subject: `Portfolio contact from ${name}`,
-          from_name: name,
           name,
           email,
           message,
-          replyto: email,
+          _subject: `Portfolio contact from ${name}`,
+          _template: "table",
+          _captcha: "false",
+          _honey: botcheck, // server-side honeypot
         }),
       });
       const data = await res.json();
-      if (data.success) {
+      // FormSubmit returns success as a boolean true or the string "true".
+      if (data.success === true || data.success === "true") {
         setStatus("Message sent — I'll get back to you soon. ✓");
         setName("");
         setEmail("");
