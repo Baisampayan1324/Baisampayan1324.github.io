@@ -126,7 +126,7 @@ export function ContactSection() {
     try {
       // FormSubmit.co (activated, masked alias — keeps the email out of the
       // client). AJAX form of the alias is /ajax/<token> (no "el/" prefix).
-      const res = await fetch("https://formsubmit.co/ajax/mobago", {
+      const res = await fetch("https://formsubmit.co/ajax/baisampayandey1999@gmail.com", {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({
