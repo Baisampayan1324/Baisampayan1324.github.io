@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLenisScroll } from '@/providers/lenis-provider';
 import SplitText from '@/components/ui/split-text';
 import FlipText from '@/components/ui/flip-text';
@@ -11,6 +11,8 @@ export default function VideoIntro() {
   const lenis = useLenisScroll();
   const videoRef = useRef<HTMLVideoElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
+  const unmutedRef = useRef(false);
+  const inAboutRef = useRef(false);
   const [currentJobIndex, setCurrentJobIndex] = useState(0);
   const [pastHero, setPastHero] = useState(false);
 
@@ -21,16 +23,66 @@ export default function VideoIntro() {
     return () => clearInterval(id);
   }, []);
 
-  // React's muted JSX prop is broken — set DOM property directly
+  // Ref callback: set muted as a real DOM property the instant the element
+  // attaches — BEFORE first paint. This beats React's broken `muted` JSX prop
+  // (which sets the property too late, so the browser's autoplay check sees
+  // <video autoplay> without muted and blocks it → frozen first frame on prod).
+  const attachVideo = useCallback((node: HTMLVideoElement | null) => {
+    videoRef.current = node;
+    if (!node) return;
+    node.muted = true;
+    node.defaultMuted = true;
+    node.setAttribute('muted', '');
+    node.playsInline = true;
+  }, []);
+
+  // Force muted autoplay with retries across media events. Muted playback is
+  // always permitted, so this reliably un-freezes the video on production.
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-    v.muted = true;
-    // Ensure playing if browser didn't autoplay (e.g. power-save mode)
-    if (v.paused) v.play().catch(() => {});
+
+    const playMuted = () => {
+      if (inAboutRef.current) return;
+      v.muted = !unmutedRef.current;
+      v.play().catch(() => {});
+    };
+
+    playMuted();
+    v.addEventListener('loadeddata', playMuted);
+    v.addEventListener('canplay', playMuted);
+    return () => {
+      v.removeEventListener('loadeddata', playMuted);
+      v.removeEventListener('canplay', playMuted);
+    };
   }, []);
 
-  // Pause video when About section enters view, resume when leaving
+  // Audio needs a user gesture (browser policy). The FIRST interaction of any
+  // kind — scroll, tap, key — silently unmutes. No button, no badge.
+  useEffect(() => {
+    const unlock = () => {
+      const v = videoRef.current;
+      if (!v || unmutedRef.current) return;
+      unmutedRef.current = true;
+      v.muted = false;
+      v.volume = 1;
+      if (!inAboutRef.current) v.play().catch(() => {});
+      removeAll();
+    };
+    const removeAll = () => {
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('touchstart', unlock);
+      window.removeEventListener('keydown', unlock);
+      window.removeEventListener('wheel', unlock);
+    };
+    window.addEventListener('pointerdown', unlock, { passive: true });
+    window.addEventListener('touchstart', unlock, { passive: true });
+    window.addEventListener('keydown', unlock, { passive: true });
+    window.addEventListener('wheel', unlock, { passive: true });
+    return removeAll;
+  }, []);
+
+  // Stop video + audio when About section is on screen; resume in hero.
   useEffect(() => {
     const about = document.getElementById('about');
     if (!about) return;
@@ -38,12 +90,14 @@ export default function VideoIntro() {
       ([entry]) => {
         const inAbout =
           entry.isIntersecting || entry.boundingClientRect.top < 0;
+        inAboutRef.current = inAbout;
         setPastHero(inAbout);
         const v = videoRef.current;
         if (!v) return;
         if (inAbout) {
           v.pause();
         } else {
+          v.muted = !unmutedRef.current;
           v.play().catch(() => {});
         }
       },
@@ -70,7 +124,7 @@ export default function VideoIntro() {
       <div className={styles.bgBlur} aria-hidden="true" />
 
       <video
-        ref={videoRef}
+        ref={attachVideo}
         className={styles.mainVideo}
         src="/hero-video.mp4"
         autoPlay
