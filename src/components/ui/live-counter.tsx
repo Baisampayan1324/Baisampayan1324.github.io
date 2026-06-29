@@ -39,7 +39,9 @@ export default function LiveCounter() {
     onDisconnect(myRef).remove();
 
     const unsub = onValue(presenceRef, (snap) => {
-      setCount(snap.size || 0);
+      // onValue fires before our set() completes → snap.size can be 0.
+      // We know at least 1 visitor (us), so clamp to minimum 1.
+      setCount(Math.max(snap.size ?? 0, 1));
     });
 
     const cleanup = () => remove(myRef);

@@ -1,7 +1,22 @@
 import type { Metadata } from 'next';
+import { Syne, DM_Sans } from 'next/font/google';
 import './globals.css';
 import { LenisProvider } from '@/providers/lenis-provider';
 import LiveCounter from '@/components/ui/live-counter';
+
+const syne = Syne({
+  subsets: ['latin'],
+  weight: ['600', '700', '800'],
+  variable: '--font-syne',
+  display: 'swap',
+});
+
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  weight: ['300', '400'],
+  variable: '--font-dm-sans',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Baisampayan Dey — AI/ML Engineer',
@@ -45,11 +60,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head suppressHydrationWarning>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      </head>
+    <html lang="en" className={`${syne.variable} ${dmSans.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <LiveCounter />
         <LenisProvider>{children}</LenisProvider>

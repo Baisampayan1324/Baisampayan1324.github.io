@@ -144,7 +144,7 @@ export const CircularProjects = ({ projects, autoplay = true }: CircularProjects
       {/* Background DotField — tinted by the active project */}
       <div className="absolute inset-0 z-0">
         <DotField
-          dotRadius={4}
+          dotRadius={1.5}
           dotSpacing={22}
           dotShape="circle"
           bulgeStrength={67}

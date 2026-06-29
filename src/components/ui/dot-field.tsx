@@ -238,19 +238,28 @@ const DotField = memo(({
           }
         };
 
-        if (p.sparkle) {
-          const hash = ((i * 2654435761) ^ (frameCount >> 3)) >>> 0;
-          if ((hash % 100) < 3) {
-            drawShape(drawX, drawY, rad * 1.8);
-          } else {
-            drawShape(drawX, drawY, rad);
-          }
-        } else {
-          drawShape(drawX, drawY, rad);
-        }
+        drawShape(drawX, drawY, rad);
       }
 
       ctx!.fill();
+
+      // Star-sparkle second pass: ~20% of dots twinkle with phase-based brightness
+      if (p.sparkle) {
+        for (let i = 0; i < len; i++) {
+          if ((i * 7 + 3) % 5 !== 0) continue;
+          const d = dots[i];
+          const phase = i * 1.6180339887 + frameCount * 0.025;
+          const brightness = (Math.sin(phase) + 1) * 0.5;
+          if (brightness < 0.65) continue;
+          const alpha = (brightness - 0.65) / 0.35;
+          ctx!.globalAlpha = alpha * 0.9;
+          ctx!.fillStyle = '#fffef0';
+          ctx!.beginPath();
+          ctx!.arc(d.sx, d.sy, rad * (1 + alpha * 2.5), 0, TWO_PI);
+          ctx!.fill();
+        }
+        ctx!.globalAlpha = 1;
+      }
 
       // @ts-ignore
       rafRef.current = requestAnimationFrame(tick);
