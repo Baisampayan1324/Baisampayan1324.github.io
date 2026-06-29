@@ -153,6 +153,30 @@ export default function VideoIntro() {
     };
   }, [pastHero]);
 
+  // Resume when the tab/window regains focus. Opening the CV or a project link
+  // in a new tab backgrounds this one, and browsers pause the video; on return
+  // nothing restarted it (the scroll-based resume only fires on a pastHero
+  // change). Re-play here whenever we're back, visible, and still in the hero.
+  useEffect(() => {
+    const resume = () => {
+      const v = videoRef.current;
+      if (!v || pastHero || document.hidden) return;
+      if (v.paused) {
+        v.muted = !hasInteracted.current;
+        void v.play().catch(() => {});
+        setIsPlaying(true);
+      }
+    };
+    document.addEventListener('visibilitychange', resume);
+    window.addEventListener('focus', resume);
+    window.addEventListener('pageshow', resume);
+    return () => {
+      document.removeEventListener('visibilitychange', resume);
+      window.removeEventListener('focus', resume);
+      window.removeEventListener('pageshow', resume);
+    };
+  }, [pastHero]);
+
   // Clean up on unmount so audio/video doesn't keep playing in the background
   useEffect(() => {
     return () => {

@@ -180,8 +180,12 @@ export function ProjectsParallax() {
 
   return (
     <section id="projects" className="relative w-full bg-background px-4 py-16 sm:px-6 sm:py-20 md:px-12 md:py-24 border-t border-border/50">
-      {/* WebGL floating lines backdrop */}
-      <div className="absolute inset-0 z-0 opacity-30">
+      {/* WebGL floating lines backdrop. The outer layer spans the whole (very
+          tall) section; the inner is sticky + one viewport tall so the canvas
+          stays centered in view as you scroll — otherwise the waves cluster in
+          the section's vertical middle and fade out by the lower projects. */}
+      <div className="absolute inset-0 z-0">
+        <div className="sticky top-0 h-screen w-full opacity-50">
         <FloatingLines
           linesGradient={["#9a7b3f", "#46587a"]}
           enabledWaves={["top", "middle", "bottom"]}
@@ -197,6 +201,7 @@ export function ProjectsParallax() {
           interactive
           parallax
         />
+        </div>
       </div>
 
       <header className="relative z-10 mx-auto mb-10 max-w-7xl md:mb-12">

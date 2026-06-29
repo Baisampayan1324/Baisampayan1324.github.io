@@ -200,7 +200,7 @@ function DetailCard({ tech, onClose }: { tech: Tech; onClose: () => void }) {
 // --- Tech list (monochrome Iconify logos, recolored black by `ico`) ---
 const TECH: Tech[] = [
   { name: "Python", icon: "simple-icons/python", desc: "Language", usage: "Primary language for everything — ML pipelines, data prep, backends, and automation scripts." },
-  { name: "Java", icon: "simple-icons/openjdk", desc: "Language", usage: "OOP fundamentals and DSA practice; used across academic projects and 300+ LeetCode solutions." },
+  { name: "Java", icon: "mdi/language-java", desc: "Language", usage: "OOP fundamentals and DSA practice; used across academic projects and 300+ LeetCode solutions." },
   { name: "SQL", icon: "simple-icons/mysql", desc: "Databases", usage: "Querying and modelling relational data behind my apps and analytics work." },
   { name: "HTML", icon: "simple-icons/html5", desc: "Markup", usage: "Structural backbone for the web UIs and dashboards I build." },
   { name: "CSS", icon: "simple-icons/css", desc: "Styling", usage: "Responsive layouts, animations, and visual polish on front-ends." },

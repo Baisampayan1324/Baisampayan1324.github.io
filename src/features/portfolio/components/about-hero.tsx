@@ -69,14 +69,15 @@ export function AboutHero() {
         className="relative w-full min-h-[340px] sm:min-h-[440px] md:w-2/5 md:min-h-full overflow-hidden bg-gradient-to-br from-primary/15 via-background to-background"
         style={reduce ? undefined : { clipPath }}
       >
-        {/* Placeholder for local dev — swap for your waving video later. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/companies/mypic.webp"
-          alt="Baisampayan Dey"
-          loading="eager"
-          className="absolute inset-0 h-full w-full object-cover object-center"
-        />
+        {/* Photo removed — placeholder panel until a new image/video is added. */}
+        <div className="absolute inset-0 grid place-items-center">
+          <span
+            className="text-[11px] font-bold uppercase tracking-[0.35em] text-muted-foreground/60"
+            style={DM}
+          >
+            Coming soon
+          </span>
+        </div>
       </motion.div>
     </section>
   );
