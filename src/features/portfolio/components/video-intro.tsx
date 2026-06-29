@@ -12,8 +12,10 @@ export default function VideoIntro() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
   const pastHeroRef = useRef(false);
+  const mutedRef = useRef(true);
   const [currentJobIndex, setCurrentJobIndex] = useState(0);
   const [pastHero, setPastHero] = useState(false);
+  const [muted, setMuted] = useState(true);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -71,7 +73,7 @@ export default function VideoIntro() {
         if (inAbout) {
           v.pause();
         } else {
-          v.muted = true;
+          v.muted = mutedRef.current;
           v.play().catch(() => {});
         }
       },
@@ -84,6 +86,20 @@ export default function VideoIntro() {
   const handleBackToTop = () => {
     if (lenis) lenis.scrollTo(0, { duration: 1.2 });
     else window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Click is a valid user gesture, so unmuting here is allowed by the browser.
+  const handleToggleSound = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    const next = !mutedRef.current;
+    mutedRef.current = next;
+    v.muted = next;
+    if (!next) {
+      v.volume = 1;
+      v.play().catch(() => {});
+    }
+    setMuted(next);
   };
 
   return (
@@ -152,6 +168,26 @@ export default function VideoIntro() {
       </div>
 
       <div className={styles.floatingControls}>
+        <button
+          className={`${styles.floatBtn} lm-btn`}
+          onClick={handleToggleSound}
+          aria-label={muted ? 'Unmute video' : 'Mute video'}
+          title={muted ? 'Sound on' : 'Mute'}
+        >
+          {muted ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 5 6 9H2v6h4l5 4V5Z"/>
+              <line x1="23" y1="9" x2="17" y2="15"/>
+              <line x1="17" y1="9" x2="23" y2="15"/>
+            </svg>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M11 5 6 9H2v6h4l5 4V5Z"/>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+            </svg>
+          )}
+        </button>
         {pastHero && (
           <button
             className={`${styles.floatBtn} lm-btn`}
