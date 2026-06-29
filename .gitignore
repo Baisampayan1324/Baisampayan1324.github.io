@@ -78,3 +78,6 @@ skills-lock.json
 
 # Local 1080p hero-video backup (keep on disk, never in the repo)
 hero-video-1080p.backup.mp4
+
+# files 
+../cinematic-portfolio/
