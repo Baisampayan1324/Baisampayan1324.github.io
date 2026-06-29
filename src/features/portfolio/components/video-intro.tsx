@@ -11,8 +11,7 @@ export default function VideoIntro() {
   const lenis = useLenisScroll();
   const videoRef = useRef<HTMLVideoElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
-  const unmutedRef = useRef(false);
-  const inAboutRef = useRef(false);
+  const pastHeroRef = useRef(false);
   const [currentJobIndex, setCurrentJobIndex] = useState(0);
   const [pastHero, setPastHero] = useState(false);
 
@@ -24,9 +23,9 @@ export default function VideoIntro() {
   }, []);
 
   // Ref callback: set muted as a real DOM property the instant the element
-  // attaches — BEFORE first paint. This beats React's broken `muted` JSX prop
-  // (which sets the property too late, so the browser's autoplay check sees
-  // <video autoplay> without muted and blocks it → frozen first frame on prod).
+  // attaches — BEFORE first paint. Beats React's broken `muted` JSX prop
+  // (set too late, so the browser's autoplay check sees <video autoplay>
+  // without muted and blocks it → frozen first frame on production).
   const attachVideo = useCallback((node: HTMLVideoElement | null) => {
     videoRef.current = node;
     if (!node) return;
@@ -36,89 +35,50 @@ export default function VideoIntro() {
     node.playsInline = true;
   }, []);
 
-  // Force muted autoplay with retries. Muted playback is always permitted, so
-  // this reliably un-freezes the video on production. Poll briefly in case the
-  // media events already fired before this effect attached (cached video).
+  // Keep the muted video playing. NEVER unmute — Chrome pauses a playing video
+  // when it's unmuted without a fresh user gesture, which froze it forever.
+  // Muted playback is always allowed, so this just guarantees it runs.
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-
-    const playMuted = () => {
-      if (inAboutRef.current) return;
-      v.muted = !unmutedRef.current;
+    const play = () => {
+      if (pastHeroRef.current) return;
+      v.muted = true;
       const p = v.play();
       if (p) p.catch(() => {});
     };
-
-    playMuted();
-    v.addEventListener('loadeddata', playMuted);
-    v.addEventListener('canplay', playMuted);
-    // Safety net: retry a few times after mount regardless of events.
-    const retries = [100, 400, 1000, 2500].map((d) => setTimeout(playMuted, d));
+    play();
+    v.addEventListener('canplay', play);
+    const retries = [200, 600, 1500].map((d) => setTimeout(play, d));
     return () => {
-      v.removeEventListener('loadeddata', playMuted);
-      v.removeEventListener('canplay', playMuted);
+      v.removeEventListener('canplay', play);
       retries.forEach(clearTimeout);
     };
   }, []);
 
-  // Audio needs a user gesture (browser policy). The FIRST interaction of any
-  // kind — scroll, tap, key — silently unmutes. No button, no badge.
-  useEffect(() => {
-    const unlock = () => {
-      const v = videoRef.current;
-      if (!v || unmutedRef.current) return;
-      unmutedRef.current = true;
-      v.muted = false;
-      v.volume = 1;
-      if (!inAboutRef.current) v.play().catch(() => {});
-      removeAll();
-    };
-    const removeAll = () => {
-      window.removeEventListener('pointerdown', unlock);
-      window.removeEventListener('touchstart', unlock);
-      window.removeEventListener('keydown', unlock);
-      window.removeEventListener('wheel', unlock);
-    };
-    window.addEventListener('pointerdown', unlock, { passive: true });
-    window.addEventListener('touchstart', unlock, { passive: true });
-    window.addEventListener('keydown', unlock, { passive: true });
-    window.addEventListener('wheel', unlock, { passive: true });
-    return removeAll;
-  }, []);
-
-  // Stop video + audio when About section is on screen; resume in hero.
+  // Pause to save resources only when About is genuinely on screen; resume in
+  // hero. Always muted — no audio toggling, no gesture, nothing that can stall.
   useEffect(() => {
     const about = document.getElementById('about');
     if (!about) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        // Only react to About actually being on screen. Avoid the
-        // boundingClientRect.top<0 trick — it can falsely pause at mount when
-        // the browser restores a scroll position.
         const inAbout = entry.isIntersecting;
-        inAboutRef.current = inAbout;
+        pastHeroRef.current = inAbout;
         setPastHero(inAbout);
         const v = videoRef.current;
         if (!v) return;
         if (inAbout) {
           v.pause();
         } else {
-          v.muted = !unmutedRef.current;
+          v.muted = true;
           v.play().catch(() => {});
         }
       },
-      { threshold: 0 }
+      { threshold: 0.15 }
     );
     observer.observe(about);
     return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      const v = videoRef.current;
-      if (v) { v.pause(); v.muted = true; }
-    };
   }, []);
 
   const handleBackToTop = () => {
