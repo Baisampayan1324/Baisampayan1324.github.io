@@ -76,5 +76,5 @@ skills-lock.json
 *IMPROVISE.md
 *PRODUCTION.md
 
-# Local backup of pre-720p hero video (keep out of the repo)
-hero-video.orig.mp4
+# Local 1080p hero-video backup (keep on disk, never in the repo)
+hero-video-1080p.backup.mp4
