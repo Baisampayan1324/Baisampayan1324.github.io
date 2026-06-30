@@ -45,7 +45,7 @@ export function AboutHero() {
           className="mb-6 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base"
           style={DM}
         >
-          Hello! I&apos;m Baisampayan Dey, an AI/ML Developer currently pursuing B.Tech in
+          Hello! I&apos;m Baisampayan Dey, currently pursuing B.Tech in
           Artificial Intelligence at Parul University, Vadodara, Gujarat. I specialize in
           building end-to-end AI solutions including RAG pipelines, LLM-based applications,
           and real-time inference systems. My passion lies in creating intelligent systems
