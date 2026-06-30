@@ -146,7 +146,7 @@ const ProjectRow = React.memo(function ProjectRow({ project, index }: { project:
               muted
               playsInline
               preload="metadata"
-              className="absolute inset-0 h-full w-full object-cover object-center scale-[1.06] origin-center"
+              className="absolute inset-0 h-full w-full object-cover object-center"
             />
           )}
           {project.image && !project.video && (
@@ -154,11 +154,11 @@ const ProjectRow = React.memo(function ProjectRow({ project, index }: { project:
             <img
               src={project.image}
               alt={project.title}
-              className="absolute inset-0 h-full w-full object-cover object-center scale-[1.06] origin-center"
+              className="absolute inset-0 h-full w-full object-cover object-center"
             />
           )}
           {(project.image || project.video) && (
-            <div className="absolute inset-0 bg-black/50 transition-colors group-hover:bg-black/30 z-[5]" />
+            <div className="absolute inset-0 bg-black/40 z-[5]" />
           )}
           {(!project.image && !project.video) && (
             <div

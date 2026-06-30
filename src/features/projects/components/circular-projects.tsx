@@ -33,7 +33,7 @@ function ProjectMedia({ project }: { project: Project }) {
         loop
         playsInline
         preload="metadata"
-        className="h-full w-full object-cover object-center scale-[1.06] origin-center"
+        className="h-full w-full object-cover object-center"
       />
     );
   }
@@ -43,7 +43,7 @@ function ProjectMedia({ project }: { project: Project }) {
       src={project.image}
       alt={project.title}
       draggable={false}
-      className="h-full w-full object-cover object-center scale-[1.06] origin-center"
+      className="h-full w-full object-cover object-center"
     />
   );
 }
