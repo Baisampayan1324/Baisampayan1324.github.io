@@ -19,6 +19,14 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Kaisg';
+  src: url('/fonts/KAISG___.TTF') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* shadcn design tokens (dark) consumed by /components/ui */
 @theme inline {
   --color-background: hsl(var(--background));

@@ -3,6 +3,7 @@ import { Syne, DM_Sans } from 'next/font/google';
 import './globals.css';
 import { LenisProvider } from '@/providers/lenis-provider';
 import LiveCounter from '@/components/ui/live-counter';
+import IntroLoader from '@/components/ui/intro-loader';
 
 const syne = Syne({
   subsets: ['latin'],
@@ -61,7 +62,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${syne.variable} ${dmSans.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Loader image fetched ASAP so the intro is never a bare dark screen */}
+        <link rel="preload" as="image" href="/companies/loader.webp" fetchPriority="high" />
+      </head>
       <body suppressHydrationWarning>
+        <IntroLoader />
         <LiveCounter />
         <LenisProvider>{children}</LenisProvider>
       </body>

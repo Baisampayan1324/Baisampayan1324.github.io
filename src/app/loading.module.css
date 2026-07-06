@@ -2,30 +2,20 @@
   min-height: 100vh;
   display: grid;
   place-items: center;
-  background: #000;
+  background: #060608;
 }
 
 .loader {
-  width: fit-content;
-  font-weight: bold;
-  font-family: monospace;
-  font-size: 30px;
-  background: radial-gradient(circle closest-side, #fff 94%, transparent) right / calc(200% - 1em) 100%;
-  animation: l24 1s infinite alternate linear;
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  border: 2px solid rgba(225, 224, 204, 0.18);
+  border-top-color: #e1e0cc;
+  animation: spin 0.7s linear infinite;
 }
 
-.loader::before {
-  content: "Loading...";
-  line-height: 1em;
-  color: transparent;
-  background: inherit;
-  background-image: radial-gradient(circle closest-side, #000 94%, #fff);
-  -webkit-background-clip: text;
-  background-clip: text;
-}
-
-@keyframes l24 {
-  100% {
-    background-position: left;
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }

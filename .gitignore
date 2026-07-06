@@ -75,9 +75,17 @@ skills-lock.json
 *PRODUCT.md
 *IMPROVISE.md
 *PRODUCTION.md
+*CLEANUP.md
 
 # Local 1080p hero-video backup (keep on disk, never in the repo)
 hero-video-1080p.backup.mp4
 
-# files 
+# Scratch / junk left by AI sessions & pasted screenshots (never commit)
+/claude.txt
+/lqip.txt
+*.original.md
+public/companies/Screenshot*.png
+public/companies/upscale.png
+
+# files
 ../cinematic-portfolio/

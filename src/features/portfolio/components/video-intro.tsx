@@ -15,7 +15,6 @@ export default function VideoIntro() {
   const mutedRef = useRef(true);
   const [currentJobIndex, setCurrentJobIndex] = useState(0);
   const [pastHero, setPastHero] = useState(false);
-  const [muted, setMuted] = useState(true);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -84,23 +83,100 @@ export default function VideoIntro() {
     return () => observer.disconnect();
   }, []);
 
+  // Intro loader's ENTER click unmutes the hero (fired within the user gesture).
+  // If Chrome refuses the unmute it PAUSES the video (the old freeze bug) — so
+  // always fall back to muted playback so the frame never stays stuck.
+  useEffect(() => {
+    const onEntered = () => {
+      const v = videoRef.current;
+      mutedRef.current = false;
+      sessionStorage.setItem('audioOn', '1');
+      if (!v) return;
+      v.muted = false;
+      v.volume = 1;
+      try {
+        v.currentTime = 0; // ENTER = fresh start, not wherever muted autoplay was
+      } catch {
+        /* seek may fail before metadata; harmless */
+      }
+      const p = v.play();
+      if (p)
+        p.catch(() => {
+          v.muted = true; // unmute blocked → keep it playing muted, no freeze
+          v.play().catch(() => {});
+        });
+    };
+    window.addEventListener('intro-entered', onEntered);
+    return () => window.removeEventListener('intro-entered', onEntered);
+  }, []);
+
+  // Safety net: if the hero video ever pauses while it's still on screen (e.g.
+  // Chrome pausing on an unmute), resume it — muted, which is always allowed —
+  // so it can never sit frozen on a single frame.
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    const onPause = () => {
+      if (pastHeroRef.current) return; // intentional pause when hero left view
+      const resume = v.play();
+      if (resume)
+        resume.catch(() => {
+          v.muted = true;
+          v.play().catch(() => {});
+        });
+    };
+    v.addEventListener('pause', onPause);
+    return () => v.removeEventListener('pause', onPause);
+  }, []);
+
+  // On refresh the intro is skipped, so ENTER never fires. If this tab already
+  // earned audio (clicked ENTER earlier), keep it available: browsers block
+  // autoplay-with-sound on reload and unmuting a muted autoplay video with no
+  // gesture freezes it — so re-enable sound on the FIRST user gesture instead.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (sessionStorage.getItem('audioOn') !== '1') return;
+
+    // Any interaction attempts to bring sound back. Only "activation" gestures
+    // (click/tap/key/pointerdown) actually let Chrome unmute — move/scroll/wheel
+    // get blocked and quietly fall back to muted — so we STAY armed until an
+    // unmute truly sticks, and only then remove the listeners.
+    const events = ['pointerdown', 'click', 'keydown', 'touchstart', 'wheel', 'scroll', 'mousemove'];
+    let done = false;
+    let last = 0;
+
+    const tryUnmute = () => {
+      if (done) return;
+      const now = performance.now();
+      if (now - last < 250) return; // throttle: mousemove/scroll fire a lot
+      last = now;
+      const v = videoRef.current;
+      if (!v || pastHeroRef.current) return;
+      mutedRef.current = false;
+      v.muted = false;
+      v.volume = 1;
+      const settle = () => {
+        if (!v.muted && !v.paused) {
+          done = true;
+          cleanup(); // sound is actually on — stop listening
+        } else {
+          v.muted = true; // blocked → keep it playing muted, stay armed
+          v.play().catch(() => {});
+        }
+      };
+      const p = v.play();
+      if (p) p.then(settle).catch(settle);
+      else settle();
+    };
+
+    const cleanup = () => events.forEach((e) => window.removeEventListener(e, tryUnmute));
+    events.forEach((e) => window.addEventListener(e, tryUnmute, { passive: true }));
+    return cleanup;
+  }, []);
+
   const handleBackToTop = () => {
     if (lenis) lenis.scrollTo(0, { duration: 1.2 });
     else window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // Click is a valid user gesture, so unmuting here is allowed by the browser.
-  const handleToggleSound = () => {
-    const v = videoRef.current;
-    if (!v) return;
-    const next = !mutedRef.current;
-    mutedRef.current = next;
-    v.muted = next;
-    if (!next) {
-      v.volume = 1;
-      v.play().catch(() => {});
-    }
-    setMuted(next);
   };
 
   return (
@@ -169,26 +245,6 @@ export default function VideoIntro() {
       </div>
 
       <div className={styles.floatingControls}>
-        <button
-          className={`${styles.floatBtn} lm-btn`}
-          onClick={handleToggleSound}
-          aria-label={muted ? 'Unmute video' : 'Mute video'}
-          title={muted ? 'Sound on' : 'Mute'}
-        >
-          {muted ? (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M11 5 6 9H2v6h4l5 4V5Z"/>
-              <line x1="23" y1="9" x2="17" y2="15"/>
-              <line x1="17" y1="9" x2="23" y2="15"/>
-            </svg>
-          ) : (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M11 5 6 9H2v6h4l5 4V5Z"/>
-              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-            </svg>
-          )}
-        </button>
         {pastHero && (
           <button
             className={`${styles.floatBtn} lm-btn`}

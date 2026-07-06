@@ -104,13 +104,11 @@ export const CircularProjects = ({ projects, autoplay = true }: CircularProjects
   const prev = useCallback(() => goTo(index - 1), [goTo, index]);
 
   const handleBack = useCallback(() => {
-    // Prefer a real history back: it restores the home page (and the exact
-    // "View More" scroll position) from the back/forward cache, which is far
-    // more reliable than reloading and re-running a hash scroll. Fall back to
-    // the hash only when there's no in-app history (e.g. /projects opened directly).
-    if (typeof window !== "undefined" && window.history.length > 1) {
-      window.history.back();
-    } else {
+    // Always land on the "View More" button on the home page. history.back()
+    // was unreliable — Lenis + client nav drop the restored scroll position, so
+    // it dumped you at the top. A hash nav re-mounts LenisProvider, which scrolls
+    // to #projects-view-more (it retries over the first ~1.5s to land reliably).
+    if (typeof window !== "undefined") {
       window.location.href = "/#projects-view-more";
     }
   }, []);
@@ -169,10 +167,10 @@ export const CircularProjects = ({ projects, autoplay = true }: CircularProjects
       </button>
 
       <div className="relative z-10 w-full max-w-6xl mx-auto px-4">
-        {/* ── Desktop layout ── */}
-        <div className="hidden md:flex relative items-center justify-center">
+        {/* ── Desktop layout (lg+ only — the fixed 640+360 widths overflow tablets) ── */}
+        <div className="hidden lg:flex relative items-center justify-center">
           {/* Media (enlarged) */}
-          <div className="w-[640px] aspect-video rounded-3xl overflow-hidden bg-[#111] flex-shrink-0 shadow-2xl ring-1 ring-white/10">
+          <div className="w-[560px] xl:w-[640px] aspect-video rounded-3xl overflow-hidden bg-[#111] flex-shrink-0 shadow-2xl ring-1 ring-white/10">
             <AnimatePresence mode="wait">
               <motion.div
                 key={`${project.title}-media`}
@@ -188,7 +186,7 @@ export const CircularProjects = ({ projects, autoplay = true }: CircularProjects
           </div>
 
           {/* Card (overlaps the media) — reduced width */}
-          <div className="ml-[-90px] z-10 w-[360px] flex-shrink-0 rounded-3xl border border-white/10 bg-[#101010]/95 p-6 shadow-2xl backdrop-blur-md">
+          <div className="ml-[-90px] z-10 w-[340px] xl:w-[360px] flex-shrink-0 rounded-3xl border border-white/10 bg-[#101010]/95 p-6 shadow-2xl backdrop-blur-md">
             <AnimatePresence mode="wait">
               <motion.div
                 key={project.title}
@@ -213,8 +211,8 @@ export const CircularProjects = ({ projects, autoplay = true }: CircularProjects
           </div>
         </div>
 
-        {/* ── Mobile layout ── */}
-        <div className="md:hidden mx-auto max-w-sm text-center">
+        {/* ── Mobile + tablet layout (stacked, fits any width) ── */}
+        <div className="lg:hidden mx-auto max-w-sm text-center">
           <div className="mb-6 w-full aspect-video overflow-hidden rounded-3xl bg-[#111] ring-1 ring-white/10 shadow-2xl">
             <AnimatePresence mode="wait">
               <motion.div
